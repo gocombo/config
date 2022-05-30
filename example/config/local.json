@@ -1,0 +1,6 @@
+{
+    "sayHelloTimes": 2,
+    "hello": {
+        "message": "Hello (local)"
+    }
+}
