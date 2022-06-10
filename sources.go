@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"github.com/gocombo/config/val"
+)
 
 type ReadValuesOpts struct {
 	ChangedSince *time.Time
@@ -15,5 +19,5 @@ func (opts *ReadValuesOpts) SetOpts(optsSetters ...ReadValuesOpt) {
 type ReadValuesOpt func(opts *ReadValuesOpts)
 
 type Source interface {
-	ReadValues(keys []string, optsSetters ...ReadValuesOpts) ([]RawVal, error)
+	ReadValues(keys []string, optsSetters ...ReadValuesOpts) ([]val.Raw, error)
 }

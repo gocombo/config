@@ -1,4 +1,4 @@
-package jsonsource
+package jsonsrc
 
 import "github.com/gocombo/config"
 
@@ -8,12 +8,12 @@ type sourceOpts struct {
 
 type SourceOpt func(opts *sourceOpts)
 
-func WithIgnoreMissingFile() SourceOpt {
+func IgnoreMissingFile() SourceOpt {
 	return func(opts *sourceOpts) {
 		opts.ignoreMissingFile = true
 	}
 }
 
-func New(filePath string, opts ...SourceOpt) config.Source {
+func New(fileName string, opts ...SourceOpt) config.Source {
 	return nil
 }

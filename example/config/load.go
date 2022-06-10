@@ -4,33 +4,42 @@ import (
 	"fmt"
 
 	"github.com/gocombo/config"
-	"github.com/gocombo/config/jsonsource"
+	"github.com/gocombo/config/jsonsrc"
 )
 
-type Loader[T any] interface {
-	Load() (*T, error)
+type loadOpts struct {
+	envName string
 }
 
-func newConfig(sub config.RawValSubscription) *HelloConfig {
-	return &HelloConfig{
-		SayHelloTimes: config.MakeVal[int](sub, "sayHelloTimes"),
-		Server: &Server{
-			Port: config.MakeVal[int](sub, "server/port"),
-		},
-		Hello: &Hello{
-			Message: config.MakeVal[string](sub, "hello/message"),
-		},
+type LoadOpt func(opts *loadOpts)
+
+func LoadWithEnvName(envName string) LoadOpt {
+	return func(opts *loadOpts) {
+		opts.envName = envName
 	}
 }
 
-func LoadConfig() *HelloConfig {
-	cfg, err := config.Load(newConfig,
-		config.WithSources(
-			jsonsource.New("config.json"),
+func defaultLoadOpts() loadOpts {
+	return loadOpts{
+		envName: "local",
+	}
+}
+
+func LoadConfig(optSetter ...LoadOpt) *HelloConfig {
+	opts := defaultLoadOpts()
+	for _, set := range optSetter {
+		set(&opts)
+	}
+	cfg, err := config.Load(
+		newConfig,
+		config.LoadWithSources(
+			jsonsrc.New("default.json"),
+			jsonsrc.New(fmt.Sprintf("%s.json", opts.envName)),
+			jsonsrc.New(fmt.Sprintf("%s-user.json", opts.envName), jsonsrc.IgnoreMissingFile()),
 		),
 	)
 	if err != nil {
-		panic(fmt.Errorf("failed to load config: %w", err))
+		panic(err)
 	}
 	return cfg
 }

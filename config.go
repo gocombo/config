@@ -1,25 +1,19 @@
 package config
 
-type RawVal struct {
-	Val interface{}
-}
-
-type RawValSubscription interface {
-	subscribe(key string, handler func(val RawVal))
-}
-
-type configFactory[T any] func(sub RawValSubscription) *T
+import "github.com/gocombo/config/val"
 
 type loadOpts struct {
 }
 
 type LoadOpt func(opts *loadOpts)
 
-func WithSources(sources ...Source) LoadOpt {
-	return nil
+type configFactory[T any] func(valLoader val.Loader) *T
+
+func LoadWithSources(sources ...Source) LoadOpt {
+	return func(opts *loadOpts) {
+	}
 }
 
-func Load[T any](newConfig configFactory[T], opts ...LoadOpt) (*T, error) {
-	cfg := newConfig(nil)
-	return cfg, nil
+func Load[T any](factory configFactory[T], opts ...LoadOpt) (*T, error) {
+	return nil, nil
 }
