@@ -1,3 +1,4 @@
+.PHONY: tools
 
 cover_dir=.cover
 cover_profile=${cover_dir}/profile.out
@@ -15,6 +16,12 @@ lint: bin/golangci-lint
 
 ${cover_dir}:
 	mkdir -p ${cover_dir}
+
+tools:
+	@for package in $$(grep '_ \"' tools/tools.go | sed 's/_ //g' | sed 's/[^a-zA-Z0-9/.]//g'); do \
+		echo "Installing package $${package} or skipping if already installed..."; \
+		go install $${package}; \
+	done
 
 test: lint ${cover_dir}
 	go test -coverprofile=${cover_profile} ./...
