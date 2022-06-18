@@ -14,7 +14,11 @@ type mockLoader struct {
 }
 
 func (l *mockLoader) Load(path string) (Raw, error) {
-	return l.rawByPath[path], nil
+	raw, ok := l.rawByPath[path]
+	if !ok {
+		return Raw{}, fmt.Errorf("value not found: %s", path)
+	}
+	return raw, nil
 }
 
 func (l *mockLoader) NotifyError(path string, err error) {
@@ -23,17 +27,34 @@ func (l *mockLoader) NotifyError(path string, err error) {
 
 func TestValue(t *testing.T) {
 	t.Run("string value", func(t *testing.T) {
-		val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
-		wantVal1Val := gofakeit.SentenceSimple()
+		rawByPath := map[string]Raw{
+			fmt.Sprintf("/seed-path1/%s", gofakeit.Word()): {Val: gofakeit.SentenceSimple()},
+			fmt.Sprintf("/seed-path2/%s", gofakeit.Word()): {Val: gofakeit.SentenceSimple()},
+		}
 		loader := &mockLoader{
-			rawByPath: map[string]Raw{
-				val1Path: {Val: wantVal1Val},
-				fmt.Sprintf("/path2/%s", gofakeit.Word()): {Val: gofakeit.SentenceSimple()},
-				fmt.Sprintf("/path3/%s", gofakeit.Word()): {Val: gofakeit.SentenceSimple()},
-			},
+			rawByPath:    rawByPath,
 			errorsByPath: map[string]error{},
 		}
-		gotVal1Val := Load[string](loader, val1Path)
-		assert.Equal(t, wantVal1Val, gotVal1Val)
+		t.Run("existing value", func(t *testing.T) {
+			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
+			wantVal1Val := gofakeit.SentenceSimple()
+			rawByPath[val1Path] = Raw{Val: wantVal1Val}
+			gotVal1Val := Load[string](loader, val1Path)
+			assert.Equal(t, wantVal1Val, gotVal1Val)
+		})
+		t.Run("non existing value", func(t *testing.T) {
+			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
+			gotVal1Val := Load[string](loader, val1Path)
+			assert.Equal(t, "", gotVal1Val)
+			assert.Len(t, loader.errorsByPath, 1)
+			assert.Equal(t, fmt.Errorf("value not found: %s", val1Path), loader.errorsByPath[val1Path])
+		})
+		t.Run("invalid value", func(t *testing.T) {
+			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
+			rawByPath[val1Path] = Raw{Val: gofakeit.Number(1, 100)}
+			gotVal1Val := Load[string](loader, val1Path)
+			assert.Equal(t, "", gotVal1Val)
+			assert.Equal(t, fmt.Errorf("value not a string: %s", val1Path), loader.errorsByPath[val1Path])
+		})
 	})
 }
