@@ -1,0 +1,7 @@
+*.log
+/tmp/
+.cover
+.vscode
+.DS_Store
+.idea
+bin/golangci-lint
