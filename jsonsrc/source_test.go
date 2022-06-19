@@ -84,5 +84,22 @@ func TestSource(t *testing.T) {
 			assertVal("nested/str_val_1", mockValues.Nested.StrVal1)
 			assertVal("nested/str_val_2", mockValues.Nested.StrVal2)
 		})
+		t.Run("ignore non existing values", func(t *testing.T) {
+			mockValues := randomMockSourceValues()
+			source := New("test.json", withMockValues(mockValues))
+			wantKeys := []string{
+				"str_val_2",
+				"nested/str_val_3",
+			}
+			values, err := source.ReadValues(wantKeys)
+			if !assert.NoError(t, err) {
+				return
+			}
+			assert.Len(t, values, 1)
+			foundIndex := slices.IndexFunc(values, func(r val.Raw) bool {
+				return r.Key == "nested/srt_val_3"
+			})
+			assert.Equal(t, -1, foundIndex)
+		})
 	})
 }
