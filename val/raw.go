@@ -1,6 +1,7 @@
 package val
 
 type Raw struct {
+	Key string
 	Val interface{}
 }
 

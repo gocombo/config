@@ -39,13 +39,16 @@ func LoadConfig(optSetter ...LoadOpt) *HelloConfig {
 			// of a previous one, if such values are available in a source.
 
 			// default.json defines base config with initial (default) values
-			jsonsrc.New("default.json"),
+			jsonsrc.New("default.json", jsonsrc.WithBaseDir("config")),
 
 			// environment specific file allows overriding defaults
-			jsonsrc.New(fmt.Sprintf("%s.json", opts.envName)),
+			jsonsrc.New(fmt.Sprintf("%s.json", opts.envName), jsonsrc.WithBaseDir("config")),
 
 			// <user> configs can be used to let devs override values locally without committing
-			jsonsrc.New(fmt.Sprintf("%s-user.json", opts.envName), jsonsrc.IgnoreMissingFile()),
+			jsonsrc.New(fmt.Sprintf("%s-user.json", opts.envName),
+				jsonsrc.WithBaseDir("config"),
+				jsonsrc.IgnoreMissingFile(),
+			),
 
 			// Allow overriding some values via environment variables
 			envsrc.New(
