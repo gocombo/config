@@ -64,12 +64,12 @@ func getRawValue(key string, source map[string]interface{}) interface{} {
 func (src *source) ReadValues(keys []string, optsSetters ...config.ReadValuesOpts) ([]val.Raw, error) {
 	file, err := src.openFile(path.Join(src.baseDir, src.fileName))
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %s", err)
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 	var rawValuesMap map[string]interface{}
 	if err := json.NewDecoder(file).Decode(&rawValuesMap); err != nil {
-		return nil, fmt.Errorf("failed to decode json: %s", err)
+		return nil, fmt.Errorf("failed to decode json: %w", err)
 	}
 	result := make([]val.Raw, 0, len(keys))
 	for _, key := range keys {

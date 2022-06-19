@@ -29,5 +29,5 @@ tools:
 	rm $@.tmp
 
 test: lint ${cover_dir} .cover-packages
-	go test -v -coverpkg=$(shell cat .cover-packages) -coverprofile=${cover_profile} ./...
+	go test -coverpkg=$(shell cat .cover-packages) -coverprofile=${cover_profile} ./...
 	go tool cover -html=${cover_profile} -o ${cover_html}

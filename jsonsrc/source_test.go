@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"os"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -100,6 +101,27 @@ func TestSource(t *testing.T) {
 				return r.Key == "nested/srt_val_3"
 			})
 			assert.Equal(t, -1, foundIndex)
+		})
+		t.Run("fail if no such file", func(t *testing.T) {
+			source := New(gofakeit.Generate("{name}.json"))
+			_, err := source.ReadValues([]string{"str_val_1"})
+			if !assert.Error(t, err) {
+				return
+			}
+			assert.ErrorIs(t, err, os.ErrNotExist)
+		})
+		t.Run("fail if not a JSON", func(t *testing.T) {
+			source := New(gofakeit.Generate("{name}.json"), func(opts *source) {
+				opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
+					return (*closableBuffer)(bytes.NewBufferString("not a json")), nil
+				}
+			})
+			_, err := source.ReadValues([]string{"str_val_1"})
+			if !assert.Error(t, err) {
+				return
+			}
+			jsonErr := &json.SyntaxError{}
+			assert.ErrorAs(t, err, &jsonErr)
 		})
 	})
 }
