@@ -24,5 +24,5 @@ tools:
 	done
 
 test: lint ${cover_dir}
-	go test -coverprofile=${cover_profile} ./...
+	go test -v -coverprofile=${cover_profile} ./...
 	go tool cover -html=${cover_profile} -o ${cover_html}
