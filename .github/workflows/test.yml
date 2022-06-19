@@ -26,4 +26,6 @@ jobs:
       run: make test
 
     - name: Report coverage
-      run: goveralls -repotoken ${{ secrets.GITHUB_TOKEN }} -coverprofile=.cover/profile.out
+      run: goveralls -service=github -coverprofile=.cover/profile.out
+      env:
+        COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
