@@ -12,17 +12,15 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - id: go-version
-      name: Get node version to use
-      run: echo "::set-output name=value::$(grep "^go " go.mod | awk '{print $2}')"
-
     - uses: actions/setup-go@v3
       with:
         go-version-file: 'go.mod'
         cache: true
 
     - name: Get deps
-      run: go mod download
+      run: |
+        go mod download
+        make tools
 
     - name: Test
       run: make test
