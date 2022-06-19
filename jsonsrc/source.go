@@ -62,6 +62,8 @@ func getRawValue(key string, source map[string]interface{}) interface{} {
 }
 
 func (src *source) ReadValues(keys []string, optsSetters ...config.ReadValuesOpt) ([]val.Raw, error) {
+	// TODO: Support changed
+
 	file, err := src.openFile(path.Join(src.baseDir, src.fileName))
 	if err != nil {
 		if src.ignoreMissingFile && os.IsNotExist(err) {
