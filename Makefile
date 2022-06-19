@@ -28,6 +28,6 @@ tools:
 	awk '{print $2}' $@.tmp | paste -s -d, - > $@
 	rm $@.tmp
 
-test: lint ${cover_dir}
+test: lint ${cover_dir} .cover-packages
 	go test -v -coverpkg=$(shell cat .cover-packages) -coverprofile=${cover_profile} ./...
 	go tool cover -html=${cover_profile} -o ${cover_html}
