@@ -18,6 +18,12 @@ func (opts *ReadValuesOpts) SetOpts(optsSetters ...ReadValuesOpt) {
 
 type ReadValuesOpt func(opts *ReadValuesOpts)
 
+func ReadValuesChangedSince(t time.Time) ReadValuesOpt {
+	return func(opts *ReadValuesOpts) {
+		opts.ChangedSince = &t
+	}
+}
+
 type Source interface {
-	ReadValues(keys []string, optsSetters ...ReadValuesOpts) ([]val.Raw, error)
+	ReadValues(keys []string, optsSetters ...ReadValuesOpt) ([]val.Raw, error)
 }

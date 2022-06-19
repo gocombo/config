@@ -52,7 +52,7 @@ func LoadConfig(optSetter ...LoadOpt) *HelloConfig {
 
 			// Allow overriding some values via environment variables
 			envsrc.New(
-				envsrc.SetValue("server/port").FromEnv("PORT"),
+				envsrc.Set("server/port").From("PORT"),
 			),
 		),
 	)

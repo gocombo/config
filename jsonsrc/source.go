@@ -61,7 +61,7 @@ func getRawValue(key string, source map[string]interface{}) interface{} {
 	return nil
 }
 
-func (src *source) ReadValues(keys []string, optsSetters ...config.ReadValuesOpts) ([]val.Raw, error) {
+func (src *source) ReadValues(keys []string, optsSetters ...config.ReadValuesOpt) ([]val.Raw, error) {
 	file, err := src.openFile(path.Join(src.baseDir, src.fileName))
 	if err != nil {
 		if src.ignoreMissingFile && os.IsNotExist(err) {
