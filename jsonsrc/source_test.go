@@ -23,7 +23,7 @@ func (b *closableBuffer) Close() error {
 	return nil
 }
 
-func TestSource(t *testing.T) {
+func TestJsonSource(t *testing.T) {
 	type mockNested struct {
 		StrVal1 string `json:"str_val_1"`
 		StrVal2 string `json:"str_val_2"`
@@ -109,6 +109,14 @@ func TestSource(t *testing.T) {
 				return
 			}
 			assert.ErrorIs(t, err, os.ErrNotExist)
+		})
+		t.Run("ignore missing file", func(t *testing.T) {
+			source := New(gofakeit.Generate("{name}.json"), IgnoreMissingFile())
+			vals, err := source.ReadValues([]string{"str_val_1"})
+			if assert.NoError(t, err) {
+				return
+			}
+			assert.Len(t, vals, 0)
 		})
 		t.Run("fail if not a JSON", func(t *testing.T) {
 			source := New(gofakeit.Generate("{name}.json"), func(opts *source) {

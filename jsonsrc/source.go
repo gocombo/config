@@ -64,6 +64,9 @@ func getRawValue(key string, source map[string]interface{}) interface{} {
 func (src *source) ReadValues(keys []string, optsSetters ...config.ReadValuesOpts) ([]val.Raw, error) {
 	file, err := src.openFile(path.Join(src.baseDir, src.fileName))
 	if err != nil {
+		if src.ignoreMissingFile && os.IsNotExist(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
