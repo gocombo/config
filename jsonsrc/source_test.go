@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -59,8 +60,9 @@ func TestJsonSource(t *testing.T) {
 
 	t.Run("ReadValues", func(t *testing.T) {
 		t.Run("should return values from json source", func(t *testing.T) {
+			wantFileName := gofakeit.Generate("{name}.json")
 			mockValues := randomMockSourceValues()
-			source := New("test.json", withMockValues(mockValues))
+			source := New(wantFileName, withMockValues(mockValues))
 			wantKeys := []string{
 				"str_val_1",
 				"str_val_2",
@@ -130,6 +132,37 @@ func TestJsonSource(t *testing.T) {
 			}
 			jsonErr := &json.SyntaxError{}
 			assert.ErrorAs(t, err, &jsonErr)
+		})
+		t.Run("load from given file", func(t *testing.T) {
+			wantFileName := gofakeit.Generate("{name}.json")
+			var gotFilePath string
+			source := New(wantFileName, func(opts *source) {
+				opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
+					gotFilePath = fileName
+					return (*closableBuffer)(bytes.NewBufferString("{}")), nil
+				}
+			})
+			_, err := source.ReadValues([]string{"str_val_1"})
+			if !assert.NoError(t, err) {
+				return
+			}
+			assert.Equal(t, wantFileName, gotFilePath)
+		})
+		t.Run("load from base dir", func(t *testing.T) {
+			wantFileName := gofakeit.Generate("{name}.json")
+			wantDir := gofakeit.Generate("/{name}/{name}")
+			var gotFilePath string
+			source := New(wantFileName, WithBaseDir(wantDir), func(opts *source) {
+				opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
+					gotFilePath = fileName
+					return (*closableBuffer)(bytes.NewBufferString("{}")), nil
+				}
+			})
+			_, err := source.ReadValues([]string{"str_val_1"})
+			if !assert.NoError(t, err) {
+				return
+			}
+			assert.Equal(t, path.Join(wantDir, wantFileName), gotFilePath)
 		})
 	})
 }
