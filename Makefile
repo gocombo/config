@@ -1,4 +1,4 @@
-.PHONY: tools
+.PHONY: tools .cover-packages
 
 cover_dir=.cover
 cover_profile=${cover_dir}/profile.out
@@ -23,6 +23,11 @@ tools:
 		go install $${package}; \
 	done
 
+.cover-packages:
+	go list ./... | grep -v -f .cover-ignore  > $@.tmp
+	awk '{print $2}' $@.tmp | paste -s -d, - > $@
+	rm $@.tmp
+
 test: lint ${cover_dir}
-	go test -v -coverprofile=${cover_profile} ./...
+	go test -v -coverpkg=$(shell cat .cover-packages) -coverprofile=${cover_profile} ./...
 	go tool cover -html=${cover_profile} -o ${cover_html}
