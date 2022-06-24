@@ -69,27 +69,23 @@ func TestJsonSource(t *testing.T) {
 	t.Run("load", func(t *testing.T) {
 		loadFromOpts := func(fileName string, opts ...LoadOpt) (config.Source, error) {
 			mockOpts := &mockLoadOpts{}
-			loadOpt := Load(fileName)
+			loadOpt := Load(fileName, opts...)
 			loadOpt(mockOpts)
 			if len(mockOpts.sourceLoaders) < 1 {
 				return nil, fmt.Errorf("no source loader added to opts")
 			}
 			return mockOpts.sourceLoaders[0]()
 		}
-
 		t.Run("fail if no such file", func(t *testing.T) {
 			_, err := loadFromOpts(gofakeit.Generate("{name}.json"))
 			assert.ErrorIs(t, err, os.ErrNotExist)
 		})
-		t.Run("ignore missing file", func(t *testing.T) {
-			source, err := loadFromOpts(gofakeit.Generate("{name}.json"))
-			if assert.NoError(t, err) {
+		t.Run("optionally not fail if no such file", func(t *testing.T) {
+			source, err := loadFromOpts(gofakeit.Generate("{name}.json"), IgnoreMissingFile())
+			if !assert.NoError(t, err) {
 				return
 			}
-			_, ok := source.GetValue(gofakeit.Generate("path-1/{word}/path-2/{word}"))
-			if !assert.False(t, ok) {
-				return
-			}
+			assert.NotNil(t, source)
 		})
 		t.Run("fail if not a JSON", func(t *testing.T) {
 			_, err := loadFromOpts(
@@ -129,6 +125,7 @@ func TestJsonSource(t *testing.T) {
 			var gotFilePath string
 			_, err := loadFromOpts(
 				wantFileName,
+				WithBaseDir(wantDir),
 				func(opts *loadOpts) {
 					opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
 						gotFilePath = fileName
@@ -164,8 +161,7 @@ func TestJsonSource(t *testing.T) {
 			assertVal("nested/str_val_2", mockValues.Nested.StrVal2)
 		})
 		t.Run("handle non existing data", func(t *testing.T) {
-			mockValues := randomMockSourceValues()
-			source, err := load("test.json", withMockValues(mockValues))
+			source, err := load("test.json", IgnoreMissingFile())
 			if !assert.NoError(t, err) {
 				return
 			}

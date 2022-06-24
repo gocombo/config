@@ -13,7 +13,6 @@ import (
 )
 
 type loadOpts struct {
-	fileName          string
 	baseDir           string
 	ignoreMissingFile bool
 	openFile          func(fileName string) (file io.ReadCloser, err error)
@@ -50,6 +49,9 @@ func IgnoreMissingFile() LoadOpt {
 }
 
 func getRawValue(key string, source map[string]interface{}) interface{} {
+	if source == nil {
+		return nil
+	}
 	firstSeparatorIndex := strings.Index(key, "/")
 	if firstSeparatorIndex >= 0 {
 		parentKey := key[:firstSeparatorIndex]
@@ -71,6 +73,7 @@ type source struct {
 	rawValues map[string]interface{}
 }
 
+// TODO: Null value support
 func (src *source) GetValue(key string) (val.Raw, bool) {
 	if v := getRawValue(key, src.rawValues); v != nil {
 		return val.Raw{Key: key, Val: v}, true
@@ -90,10 +93,10 @@ func load(fileName string, optSetter ...LoadOpt) (config.Source, error) {
 	opts := defaultLoadOpts()
 	opts.set(optSetter)
 
-	file, err := opts.openFile(path.Join(opts.baseDir, opts.fileName))
+	file, err := opts.openFile(path.Join(opts.baseDir, fileName))
 	if err != nil {
 		if opts.ignoreMissingFile && os.IsNotExist(err) {
-			return nil, nil
+			return &source{}, nil
 		}
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
