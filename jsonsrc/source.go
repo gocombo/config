@@ -12,15 +12,15 @@ import (
 	"github.com/gocombo/config/val"
 )
 
-type source struct {
+type loadOpts struct {
 	fileName          string
 	baseDir           string
 	ignoreMissingFile bool
 	openFile          func(fileName string) (file io.ReadCloser, err error)
 }
 
-func newSource() *source {
-	return &source{
+func defaultLoadOpts() loadOpts {
+	return loadOpts{
 		baseDir:           "",
 		ignoreMissingFile: false,
 		openFile: func(fileName string) (file io.ReadCloser, err error) {
@@ -29,16 +29,22 @@ func newSource() *source {
 	}
 }
 
-type SourceOpt func(opts *source)
+func (o *loadOpts) set(optSetter []LoadOpt) {
+	for _, opt := range optSetter {
+		opt(o)
+	}
+}
 
-func WithBaseDir(baseDir string) SourceOpt {
-	return func(opts *source) {
+type LoadOpt func(opts *loadOpts)
+
+func WithBaseDir(baseDir string) LoadOpt {
+	return func(opts *loadOpts) {
 		opts.baseDir = baseDir
 	}
 }
 
-func IgnoreMissingFile() SourceOpt {
-	return func(opts *source) {
+func IgnoreMissingFile() LoadOpt {
+	return func(opts *loadOpts) {
 		opts.ignoreMissingFile = true
 	}
 }
@@ -61,35 +67,42 @@ func getRawValue(key string, source map[string]interface{}) interface{} {
 	return nil
 }
 
-func (src *source) ReadValues(keys []string, optsSetters ...config.ReadValuesOpt) ([]val.Raw, error) {
-	// TODO: Support changed
+type source struct {
+	rawValues map[string]interface{}
+}
 
-	file, err := src.openFile(path.Join(src.baseDir, src.fileName))
+func (src *source) GetValue(key string) (val.Raw, bool) {
+	if v := getRawValue(key, src.rawValues); v != nil {
+		return val.Raw{Key: key, Val: v}, true
+	}
+	return val.Raw{}, false
+}
+
+func Load(fileName string, optSetter ...LoadOpt) config.LoadOpt {
+	return func(opts config.LoadOpts) {
+		opts.AddSourceLoader(func() (config.Source, error) {
+			return load(fileName, optSetter...)
+		})
+	}
+}
+
+func load(fileName string, optSetter ...LoadOpt) (config.Source, error) {
+	opts := defaultLoadOpts()
+	opts.set(optSetter)
+
+	file, err := opts.openFile(path.Join(opts.baseDir, opts.fileName))
 	if err != nil {
-		if src.ignoreMissingFile && os.IsNotExist(err) {
+		if opts.ignoreMissingFile && os.IsNotExist(err) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
-	var rawValuesMap map[string]interface{}
-	if err := json.NewDecoder(file).Decode(&rawValuesMap); err != nil {
+	src := source{
+		rawValues: map[string]interface{}{},
+	}
+	if err := json.NewDecoder(file).Decode(&src.rawValues); err != nil {
 		return nil, fmt.Errorf("failed to decode json: %w", err)
 	}
-	result := make([]val.Raw, 0, len(keys))
-	for _, key := range keys {
-		if v := getRawValue(key, rawValuesMap); v != nil {
-			result = append(result, val.Raw{Key: key, Val: v})
-		}
-	}
-	return result, nil
-}
-
-func New(fileName string, opts ...SourceOpt) config.Source {
-	src := newSource()
-	src.fileName = fileName
-	for _, opt := range opts {
-		opt(src)
-	}
-	return src
+	return &src, nil
 }

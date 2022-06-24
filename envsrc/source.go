@@ -7,19 +7,19 @@ import (
 	"github.com/gocombo/config/val"
 )
 
-type source struct {
-	pathToEnvName map[string]string
+type sourceOpts struct {
+	keyToEnvName map[string]string
 }
 
-type SourceOpt func(opts *source)
+type SourceOpt func(opts *sourceOpts)
 
 type LoadValOptBuilder struct {
 	valuePath string
 }
 
 func (b *LoadValOptBuilder) From(envName string) SourceOpt {
-	return func(opts *source) {
-		opts.pathToEnvName[b.valuePath] = envName
+	return func(opts *sourceOpts) {
+		opts.keyToEnvName[b.valuePath] = envName
 	}
 }
 
@@ -29,33 +29,45 @@ func Set(path string) *LoadValOptBuilder {
 	}
 }
 
-func (s *source) ReadValues(paths []string, optsSetters ...config.ReadValuesOpt) ([]val.Raw, error) {
-	opts := &config.ReadValuesOpts{}
-	opts.SetOpts(optsSetters...)
-	if opts.ChangedSince != nil {
-		return nil, nil
+type source struct {
+	valuesByKey map[string]val.Raw
+}
+
+func (s *source) GetValue(key string) (val.Raw, bool) {
+	rawVal, ok := s.valuesByKey[key]
+	if !ok {
+		return val.Raw{}, false
 	}
-	values := make([]val.Raw, 0, len(paths))
-	for _, path := range paths {
-		envName := s.pathToEnvName[path]
-		envVal, ok := os.LookupEnv(envName)
+	return rawVal, true
+}
+
+func Load(optSetters ...SourceOpt) config.LoadOpt {
+	return func(opts config.LoadOpts) {
+		opts.AddSourceLoader(func() (config.Source, error) {
+			return load(optSetters...), nil
+		})
+	}
+}
+
+func load(optSetters ...SourceOpt) config.Source {
+	opts := &sourceOpts{
+		keyToEnvName: map[string]string{},
+	}
+	for _, optSetter := range optSetters {
+		optSetter(opts)
+	}
+	src := &source{
+		valuesByKey: make(map[string]val.Raw),
+	}
+	for key, env := range opts.keyToEnvName {
+		envVal, ok := os.LookupEnv(env)
 		if !ok {
 			continue
 		}
-		values = append(values, val.Raw{
-			Key: path,
+		src.valuesByKey[key] = val.Raw{
+			Key: key,
 			Val: envVal,
-		})
+		}
 	}
-	return values, nil
-}
-
-func New(opts ...SourceOpt) config.Source {
-	s := &source{
-		pathToEnvName: make(map[string]string),
-	}
-	for _, opt := range opts {
-		opt(s)
-	}
-	return s
+	return src
 }

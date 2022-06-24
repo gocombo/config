@@ -3,15 +3,15 @@ package jsonsrc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/gocombo/config/val"
+	"github.com/gocombo/config"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
 )
 
 type closableBuffer bytes.Buffer
@@ -22,6 +22,14 @@ func (b *closableBuffer) Read(p []byte) (n int, err error) {
 
 func (b *closableBuffer) Close() error {
 	return nil
+}
+
+type mockLoadOpts struct {
+	sourceLoaders []config.SourceLoader
+}
+
+func (m *mockLoadOpts) AddSourceLoader(loader config.SourceLoader) {
+	m.sourceLoaders = append(m.sourceLoaders, loader)
 }
 
 func TestJsonSource(t *testing.T) {
@@ -46,8 +54,8 @@ func TestJsonSource(t *testing.T) {
 		}
 	}
 
-	withMockValues := func(mockValues mockSourceValues) SourceOpt {
-		return func(s *source) {
+	withMockValues := func(mockValues mockSourceValues) LoadOpt {
+		return func(s *loadOpts) {
 			s.openFile = func(fileName string) (file io.ReadCloser, err error) {
 				vals, err := json.Marshal(mockValues)
 				if err != nil {
@@ -58,75 +66,40 @@ func TestJsonSource(t *testing.T) {
 		}
 	}
 
-	t.Run("ReadValues", func(t *testing.T) {
-		t.Run("should return values from json source", func(t *testing.T) {
-			wantFileName := gofakeit.Generate("{name}.json")
-			mockValues := randomMockSourceValues()
-			source := New(wantFileName, withMockValues(mockValues))
-			wantKeys := []string{
-				"str_val_1",
-				"str_val_2",
-				"nested/str_val_1",
-				"nested/str_val_2",
+	t.Run("load", func(t *testing.T) {
+		loadFromOpts := func(fileName string, opts ...LoadOpt) (config.Source, error) {
+			mockOpts := &mockLoadOpts{}
+			loadOpt := Load(fileName)
+			loadOpt(mockOpts)
+			if len(mockOpts.sourceLoaders) < 1 {
+				return nil, fmt.Errorf("no source loader added to opts")
 			}
-			values, err := source.ReadValues(wantKeys)
-			if !assert.NoError(t, err) {
-				return
-			}
-			assertVal := func(key string, wantVal string) {
-				foundIndex := slices.IndexFunc(values, func(r val.Raw) bool {
-					return r.Key == key
-				})
-				if !assert.NotEqual(t, -1, foundIndex, "%s not found", key) {
-					return
-				}
-				assert.Equal(t, wantVal, values[foundIndex].Val)
-			}
-			assertVal("str_val_1", mockValues.StrVal1)
-			assertVal("str_val_2", mockValues.StrVal2)
-			assertVal("nested/str_val_1", mockValues.Nested.StrVal1)
-			assertVal("nested/str_val_2", mockValues.Nested.StrVal2)
-		})
-		t.Run("ignore non existing values", func(t *testing.T) {
-			mockValues := randomMockSourceValues()
-			source := New("test.json", withMockValues(mockValues))
-			wantKeys := []string{
-				"str_val_2",
-				"nested/str_val_3",
-			}
-			values, err := source.ReadValues(wantKeys)
-			if !assert.NoError(t, err) {
-				return
-			}
-			assert.Len(t, values, 1)
-			foundIndex := slices.IndexFunc(values, func(r val.Raw) bool {
-				return r.Key == "nested/srt_val_3"
-			})
-			assert.Equal(t, -1, foundIndex)
-		})
+			return mockOpts.sourceLoaders[0]()
+		}
+
 		t.Run("fail if no such file", func(t *testing.T) {
-			source := New(gofakeit.Generate("{name}.json"))
-			_, err := source.ReadValues([]string{"str_val_1"})
-			if !assert.Error(t, err) {
-				return
-			}
+			_, err := loadFromOpts(gofakeit.Generate("{name}.json"))
 			assert.ErrorIs(t, err, os.ErrNotExist)
 		})
 		t.Run("ignore missing file", func(t *testing.T) {
-			source := New(gofakeit.Generate("{name}.json"), IgnoreMissingFile())
-			vals, err := source.ReadValues([]string{"str_val_1"})
+			source, err := loadFromOpts(gofakeit.Generate("{name}.json"))
 			if assert.NoError(t, err) {
 				return
 			}
-			assert.Len(t, vals, 0)
+			_, ok := source.GetValue(gofakeit.Generate("path-1/{word}/path-2/{word}"))
+			if !assert.False(t, ok) {
+				return
+			}
 		})
 		t.Run("fail if not a JSON", func(t *testing.T) {
-			source := New(gofakeit.Generate("{name}.json"), func(opts *source) {
-				opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
-					return (*closableBuffer)(bytes.NewBufferString("not a json")), nil
-				}
-			})
-			_, err := source.ReadValues([]string{"str_val_1"})
+			_, err := loadFromOpts(
+				gofakeit.Generate("{name}.json"),
+				func(opts *loadOpts) {
+					opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
+						return (*closableBuffer)(bytes.NewBufferString("not a json")), nil
+					}
+				},
+			)
 			if !assert.Error(t, err) {
 				return
 			}
@@ -136,13 +109,15 @@ func TestJsonSource(t *testing.T) {
 		t.Run("load from given file", func(t *testing.T) {
 			wantFileName := gofakeit.Generate("{name}.json")
 			var gotFilePath string
-			source := New(wantFileName, func(opts *source) {
-				opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
-					gotFilePath = fileName
-					return (*closableBuffer)(bytes.NewBufferString("{}")), nil
-				}
-			})
-			_, err := source.ReadValues([]string{"str_val_1"})
+			_, err := loadFromOpts(
+				wantFileName,
+				func(opts *loadOpts) {
+					opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
+						gotFilePath = fileName
+						return (*closableBuffer)(bytes.NewBufferString("{}")), nil
+					}
+				},
+			)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -152,17 +127,52 @@ func TestJsonSource(t *testing.T) {
 			wantFileName := gofakeit.Generate("{name}.json")
 			wantDir := gofakeit.Generate("/{name}/{name}")
 			var gotFilePath string
-			source := New(wantFileName, WithBaseDir(wantDir), func(opts *source) {
-				opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
-					gotFilePath = fileName
-					return (*closableBuffer)(bytes.NewBufferString("{}")), nil
-				}
-			})
-			_, err := source.ReadValues([]string{"str_val_1"})
+			_, err := loadFromOpts(
+				wantFileName,
+				func(opts *loadOpts) {
+					opts.openFile = func(fileName string) (file io.ReadCloser, err error) {
+						gotFilePath = fileName
+						return (*closableBuffer)(bytes.NewBufferString("{}")), nil
+					}
+				},
+			)
 			if !assert.NoError(t, err) {
 				return
 			}
 			assert.Equal(t, path.Join(wantDir, wantFileName), gotFilePath)
+		})
+	})
+
+	t.Run("GetValue", func(t *testing.T) {
+		t.Run("should return values from json source", func(t *testing.T) {
+			wantFileName := gofakeit.Generate("{name}.json")
+			mockValues := randomMockSourceValues()
+			source, err := load(wantFileName, withMockValues(mockValues))
+			if !assert.NoError(t, err) {
+				return
+			}
+			assertVal := func(key string, wantVal string) {
+				gotVal, ok := source.GetValue(key)
+				if !assert.True(t, ok, "Value %s not found", key) {
+					return
+				}
+				assert.Equal(t, wantVal, gotVal.Val)
+			}
+			assertVal("str_val_1", mockValues.StrVal1)
+			assertVal("str_val_2", mockValues.StrVal2)
+			assertVal("nested/str_val_1", mockValues.Nested.StrVal1)
+			assertVal("nested/str_val_2", mockValues.Nested.StrVal2)
+		})
+		t.Run("handle non existing data", func(t *testing.T) {
+			mockValues := randomMockSourceValues()
+			source, err := load("test.json", withMockValues(mockValues))
+			if !assert.NoError(t, err) {
+				return
+			}
+			_, ok := source.GetValue("not/existing/key")
+			if !assert.False(t, ok, "Value not/existing/key found") {
+				return
+			}
 		})
 	})
 }

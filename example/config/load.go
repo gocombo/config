@@ -33,27 +33,26 @@ func LoadConfig(optSetter ...LoadOpt) *HelloConfig {
 	}
 	cfg, err := config.Load(
 		newConfig,
-		config.LoadWithSources(
-			// Order of data sources makes a difference
-			// Last one has a priority and will "override" values
-			// of a previous one, if such values are available in a source.
 
-			// default.json defines base config with initial (default) values
-			jsonsrc.New("default.json", jsonsrc.WithBaseDir("config")),
+		// Order of data sources makes a difference
+		// Last one has a priority and will "override" values
+		// of a previous one, if such values are available in a source.
 
-			// environment specific file allows overriding defaults
-			jsonsrc.New(fmt.Sprintf("%s.json", opts.envName), jsonsrc.WithBaseDir("config")),
+		// default.json defines base config with initial (default) values
+		jsonsrc.Load("default.json", jsonsrc.WithBaseDir("config")),
 
-			// <user> configs can be used to let devs override values locally without committing
-			jsonsrc.New(fmt.Sprintf("%s-user.json", opts.envName),
-				jsonsrc.WithBaseDir("config"),
-				jsonsrc.IgnoreMissingFile(),
-			),
+		// environment specific file allows overriding defaults
+		jsonsrc.Load(fmt.Sprintf("%s.json", opts.envName), jsonsrc.WithBaseDir("config")),
 
-			// Allow overriding some values via environment variables
-			envsrc.New(
-				envsrc.Set("server/port").From("PORT"),
-			),
+		// <user> configs can be used to let devs override values locally without committing
+		jsonsrc.Load(fmt.Sprintf("%s-user.json", opts.envName),
+			jsonsrc.WithBaseDir("config"),
+			jsonsrc.IgnoreMissingFile(),
+		),
+
+		// Allow overriding some values via environment variables
+		envsrc.Load(
+			envsrc.Set("server/port").From("PORT"),
 		),
 	)
 	if err != nil {

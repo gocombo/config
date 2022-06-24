@@ -25,15 +25,15 @@ type HelloConfig struct {
 	String        string
 }
 
-func newConfig(loader val.Loader) *HelloConfig {
+func newConfig(p val.Provider) *HelloConfig {
 	return &HelloConfig{
-		SayHelloTimes: val.Load[int](loader, "sayHelloTimes"),
+		SayHelloTimes: val.Get[int](p, "sayHelloTimes"),
 		Server: &Server{
-			Port: val.Load[int](loader, "server/port"),
+			Port: val.Get[int](p, "server/port"),
 		},
 		Hello: &Hello{
-			Message: val.Load[string](loader, "hello/message"),
+			Message: val.Get[string](p, "hello/message"),
 		},
-		String: val.Load[string](loader, "string"),
+		String: val.Get[string](p, "string"),
 	}
 }

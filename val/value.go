@@ -2,14 +2,14 @@ package val
 
 import "fmt"
 
-type Loader interface {
-	Load(path string) (Raw, error)
-	NotifyError(path string, err error)
+type Provider interface {
+	Get(key string) (Raw, error)
+	NotifyError(key string, err error)
 }
 
-func Load[T any](l Loader, key string) T {
+func Get[T any](l Provider, key string) T {
 	var value T
-	raw, err := l.Load(key)
+	raw, err := l.Get(key)
 	if err != nil {
 		l.NotifyError(key, err)
 		return value
