@@ -27,13 +27,13 @@ type HelloConfig struct {
 
 func newConfig(p val.Provider) *HelloConfig {
 	return &HelloConfig{
-		SayHelloTimes: val.Get[int](p, "sayHelloTimes"),
+		SayHelloTimes: val.Define[int](p, "sayHelloTimes"),
 		Server: &Server{
-			Port: val.Get[int](p, "server/port"),
+			Port: val.Define[int](p, "server/port"),
 		},
 		Hello: &Hello{
-			Message: val.Get[string](p, "hello/message"),
+			Message: val.Define[string](p, "hello/message"),
 		},
-		String: val.Get[string](p, "string"),
+		String: val.Define[string](p, "string"),
 	}
 }

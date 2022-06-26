@@ -7,7 +7,7 @@ type Provider interface {
 	NotifyError(key string, err error)
 }
 
-func Get[T any](l Provider, key string) T {
+func Define[T any](l Provider, key string) T {
 	var value T
 	raw, err := l.Get(key)
 	if err != nil {

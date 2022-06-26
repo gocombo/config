@@ -39,12 +39,12 @@ func TestValue(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
 			wantVal1Val := gofakeit.SentenceSimple()
 			rawByPath[val1Path] = Raw{Val: wantVal1Val}
-			gotVal1Val := Get[string](loader, val1Path)
+			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, wantVal1Val, gotVal1Val)
 		})
 		t.Run("non existing value", func(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
-			gotVal1Val := Get[string](loader, val1Path)
+			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
 			assert.Len(t, loader.errorsByPath, 1)
 			assert.Equal(t, fmt.Errorf("value not found: %s", val1Path), loader.errorsByPath[val1Path])
@@ -52,7 +52,7 @@ func TestValue(t *testing.T) {
 		t.Run("invalid value", func(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
 			rawByPath[val1Path] = Raw{Val: gofakeit.Number(1, 100)}
-			gotVal1Val := Get[string](loader, val1Path)
+			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
 			assert.Equal(t, fmt.Errorf("value not a string: %s", val1Path), loader.errorsByPath[val1Path])
 		})
