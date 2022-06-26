@@ -7,7 +7,6 @@ require (
 	github.com/mattn/goveralls v0.0.11
 	github.com/mitranim/gow v0.0.0-20220616172716-e9d92c985e03
 	github.com/stretchr/testify v1.7.2
-	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 )
 
 require (
