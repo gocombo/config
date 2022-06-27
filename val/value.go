@@ -2,6 +2,11 @@ package val
 
 import "fmt"
 
+type Raw struct {
+	Key string
+	Val interface{}
+}
+
 type Provider interface {
 	Get(key string) (Raw, error)
 	NotifyError(key string, err error)
