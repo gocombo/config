@@ -8,18 +8,22 @@ type Raw struct {
 }
 
 type Provider interface {
-	Get(key string) (Raw, error)
+	// Get returns the value for the given key or false
+	Get(key string) (Raw, bool)
+
+	// NotifyError notifies the provider of an error
+	// that may occur when parsing or is value is missing
 	NotifyError(key string, err error)
 }
 
 func Define[T any](l Provider, key string) T {
 	var value T
-	raw, err := l.Get(key)
-	if err != nil {
-		l.NotifyError(key, err)
+	raw, ok := l.Get(key)
+	if !ok {
+		l.NotifyError(key, fmt.Errorf("value %s not found", key))
 		return value
 	}
-	value, ok := raw.Val.(T)
+	value, ok = raw.Val.(T)
 	if !ok {
 		l.NotifyError(key, fmt.Errorf("value not a %T: %s", value, key))
 	}

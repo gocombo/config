@@ -13,12 +13,12 @@ type mockLoader struct {
 	errorsByPath map[string]error
 }
 
-func (l *mockLoader) Get(path string) (Raw, error) {
+func (l *mockLoader) Get(path string) (Raw, bool) {
 	raw, ok := l.rawByPath[path]
 	if !ok {
-		return Raw{}, fmt.Errorf("value not found: %s", path)
+		return Raw{}, false
 	}
-	return raw, nil
+	return raw, true
 }
 
 func (l *mockLoader) NotifyError(path string, err error) {
@@ -47,7 +47,7 @@ func TestValue(t *testing.T) {
 			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
 			assert.Len(t, loader.errorsByPath, 1)
-			assert.Equal(t, fmt.Errorf("value not found: %s", val1Path), loader.errorsByPath[val1Path])
+			assert.Equal(t, fmt.Errorf("value %s not found", val1Path), loader.errorsByPath[val1Path])
 		})
 		t.Run("invalid value", func(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
