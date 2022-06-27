@@ -16,7 +16,9 @@ type LoadOpt func(opts *loadOpts)
 
 func LoadWithEnvName(envName string) LoadOpt {
 	return func(opts *loadOpts) {
-		opts.envName = envName
+		if envName != "" {
+			opts.envName = envName
+		}
 	}
 }
 
