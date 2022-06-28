@@ -26,7 +26,73 @@ func (l *mockLoader) NotifyError(path string, err error) {
 }
 
 func TestValue(t *testing.T) {
-	t.Run("string value", func(t *testing.T) {
+	t.Run("types", func(t *testing.T) {
+		type want struct {
+			val interface{}
+			err error
+		}
+
+		type testCase struct {
+			name     string
+			rawValue Raw
+			want
+			define func(l Provider, key string) interface{}
+		}
+
+		testCases := []func() testCase{
+			func() testCase {
+				wantVal := gofakeit.SentenceSimple()
+				return testCase{
+					"string",
+					Raw{Val: wantVal},
+					want{
+						val: wantVal,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[string](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Number(1, 100)
+				return testCase{
+					"string/not a string",
+					Raw{Val: wantVal},
+					want{
+						err: ErrBadType,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[string](l, key)
+					},
+				}
+			},
+		}
+
+		for _, tt := range testCases {
+			tt := tt()
+			t.Run(tt.name, func(t *testing.T) {
+				valPath := fmt.Sprintf("/path1/%s", gofakeit.Word())
+				loader := &mockLoader{
+					rawByPath: map[string]Raw{
+						valPath: tt.rawValue,
+					},
+					errorsByPath: map[string]error{},
+				}
+				gotVal := tt.define(loader, valPath)
+				gotErr := loader.errorsByPath[valPath]
+				if tt.want.err != nil {
+					assert.ErrorIs(t, gotErr, tt.want.err)
+					return
+				}
+				if !assert.NoError(t, gotErr) {
+					return
+				}
+				assert.Equal(t, tt.want.val, gotVal)
+			})
+		}
+	})
+
+	t.Run("Define", func(t *testing.T) {
 		rawByPath := map[string]Raw{
 			fmt.Sprintf("/seed-path1/%s", gofakeit.Word()): {Val: gofakeit.SentenceSimple()},
 			fmt.Sprintf("/seed-path2/%s", gofakeit.Word()): {Val: gofakeit.SentenceSimple()},

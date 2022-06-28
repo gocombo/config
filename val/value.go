@@ -2,6 +2,16 @@ package val
 
 import "fmt"
 
+type valError string
+
+func (e valError) Error() string {
+	return string(e)
+}
+
+const (
+	ErrBadType valError = "bad type"
+)
+
 type Raw struct {
 	Key string
 	Val interface{}
@@ -25,7 +35,12 @@ func Define[T any](l Provider, key string) T {
 	}
 	value, ok = raw.Val.(T)
 	if !ok {
-		l.NotifyError(key, fmt.Errorf("value not a %T: %s", value, key))
+		l.NotifyError(key, fmt.Errorf(
+			"value %v (type=%[1]T, path=%s) is not a %T: %w",
+			raw.Val,
+			key,
+			value,
+			ErrBadType))
 	}
 	return value
 }
