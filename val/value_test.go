@@ -131,6 +131,17 @@ func TestValue(t *testing.T) {
 					},
 				}
 			},
+
+			// TODO:
+			/*
+			* - int from string
+			* - duration from string
+			* - duration number should fail
+			* - bool
+			* - bool from string
+			* - bool anything else should fail
+			* - complex struct or slice
+			 */
 		}
 
 		for _, tt := range testCases {
