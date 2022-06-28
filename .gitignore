@@ -5,3 +5,4 @@
 .DS_Store
 .idea
 bin/golangci-lint
+.cover-packages
