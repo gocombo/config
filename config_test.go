@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -68,7 +69,29 @@ func TestLoad(t *testing.T) {
 		}
 		assert.Equal(t, want, got)
 	})
-	t.Run("resolve query sources in order", func(t *testing.T) {
+	t.Run("resolve values in order (last one wins)", func(t *testing.T) {
+		want := createRandomConfig()
+		got, err := Load(
+			testConfigFactory,
+			withMockSource(&mockKeyValueSource{
+				values: map[string]val.Raw{
+					"val1": {Key: "val1", Val: fmt.Sprintf("source-1-%s", want.val1)},
+					"val2": {Key: "val2", Val: fmt.Sprintf("source-1-%s", want.val2)},
+					"val3": {Key: "val2", Val: fmt.Sprintf("source-1-%s", want.val3)},
+				},
+			}),
+			withMockSource(&mockKeyValueSource{
+				values: map[string]val.Raw{
+					"val1": {Key: "val1", Val: want.val1},
+					"val2": {Key: "val2", Val: want.val2},
+					"val3": {Key: "val3", Val: want.val3},
+				},
+			}),
+		)
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, want, got)
 	})
 	// t.Run("fail if no sources", func(t *testing.T) {
 	// })

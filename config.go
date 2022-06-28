@@ -11,8 +11,9 @@ type valuesProvider struct {
 
 // Get returns the value for the given key or false
 func (p *valuesProvider) Get(key string) (val.Raw, bool) {
-	for _, source := range p.sources {
-		if v, ok := source.GetValue(key); ok {
+	for i := range p.sources {
+		src := p.sources[len(p.sources)-1-i]
+		if v, ok := src.GetValue(key); ok {
 			return v, true
 		}
 	}
