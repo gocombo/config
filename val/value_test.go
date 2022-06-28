@@ -2,6 +2,7 @@ package val
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -131,6 +132,19 @@ func TestValue(t *testing.T) {
 					},
 				}
 			},
+			func() testCase {
+				wantVal := gofakeit.Number(10, 1000)
+				return testCase{
+					"int/from string",
+					Raw{Val: strconv.Itoa(wantVal)},
+					want{
+						err: ErrBadType,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
+					},
+				}
+			},
 
 			// TODO:
 			/*
@@ -196,7 +210,7 @@ func TestValue(t *testing.T) {
 			rawByPath[val1Path] = Raw{Val: gofakeit.Number(1, 100)}
 			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
-			assert.Equal(t, fmt.Errorf("value not a string: %s", val1Path), loader.errorsByPath[val1Path])
+			assert.ErrorIs(t, loader.errorsByPath[val1Path], ErrBadType)
 		})
 	})
 }
