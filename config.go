@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/gocombo/config/val"
 )
 
@@ -52,6 +54,9 @@ func Load[T any](factory configFactory[T], optsSetters ...LoadOpt) (*T, error) {
 	opts := loadOpts{}
 	for _, optSetter := range optsSetters {
 		optSetter(&opts)
+	}
+	if len(opts.sourceLoaders) == 0 {
+		return nil, fmt.Errorf("no sources provided")
 	}
 	sources := make([]Source, len(opts.sourceLoaders))
 	for i, loader := range opts.sourceLoaders {

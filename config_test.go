@@ -93,6 +93,13 @@ func TestLoad(t *testing.T) {
 		}
 		assert.Equal(t, want, got)
 	})
-	// t.Run("fail if no sources", func(t *testing.T) {
-	// })
+	t.Run("fail if no sources", func(t *testing.T) {
+		_, err := Load(
+			testConfigFactory,
+		)
+		if assert.Error(t, err) {
+			return
+		}
+		assert.Errorf(t, err, "no sources")
+	})
 }
