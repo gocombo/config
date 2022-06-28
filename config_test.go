@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -40,10 +41,10 @@ func TestLoad(t *testing.T) {
 		}
 	}
 
-	withMockSource := func(src *mockKeyValueSource) LoadOpt {
+	withMockSource := func(src *mockKeyValueSource, err error) LoadOpt {
 		return func(opts LoadOpts) {
 			opts.AddSourceLoader(func() (Source, error) {
-				return src, nil
+				return src, err
 			})
 		}
 	}
@@ -57,12 +58,12 @@ func TestLoad(t *testing.T) {
 					"val1": {Key: "val1", Val: want.val1},
 					"val2": {Key: "val2", Val: want.val2},
 				},
-			}),
+			}, nil),
 			withMockSource(&mockKeyValueSource{
 				values: map[string]val.Raw{
 					"val3": {Key: "val3", Val: want.val3},
 				},
-			}),
+			}, nil),
 		)
 		if !assert.NoError(t, err) {
 			return
@@ -79,19 +80,35 @@ func TestLoad(t *testing.T) {
 					"val2": {Key: "val2", Val: fmt.Sprintf("source-1-%s", want.val2)},
 					"val3": {Key: "val2", Val: fmt.Sprintf("source-1-%s", want.val3)},
 				},
-			}),
+			}, nil),
 			withMockSource(&mockKeyValueSource{
 				values: map[string]val.Raw{
 					"val1": {Key: "val1", Val: want.val1},
 					"val2": {Key: "val2", Val: want.val2},
 					"val3": {Key: "val3", Val: want.val3},
 				},
-			}),
+			}, nil),
 		)
 		if !assert.NoError(t, err) {
 			return
 		}
 		assert.Equal(t, want, got)
+	})
+	t.Run("fail if source failed to load", func(t *testing.T) {
+		wantErr := errors.New(gofakeit.Sentence(3))
+		_, gotErr := Load(
+			testConfigFactory,
+			withMockSource(&mockKeyValueSource{
+				values: map[string]val.Raw{},
+			}, nil),
+			withMockSource(&mockKeyValueSource{
+				values: map[string]val.Raw{},
+			}, wantErr),
+		)
+		if !assert.Error(t, gotErr) {
+			return
+		}
+		assert.Equal(t, wantErr, gotErr)
 	})
 	t.Run("fail if no sources", func(t *testing.T) {
 		_, err := Load(

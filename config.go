@@ -62,7 +62,6 @@ func Load[T any](factory configFactory[T], optsSetters ...LoadOpt) (*T, error) {
 	for i, loader := range opts.sourceLoaders {
 		source, err := loader()
 		if err != nil {
-			// TODO: test
 			return nil, err
 		}
 		sources[i] = source
