@@ -66,6 +66,71 @@ func TestValue(t *testing.T) {
 					},
 				}
 			},
+			func() testCase {
+				wantVal := gofakeit.Number(10, 1000)
+				return testCase{
+					"int",
+					Raw{Val: wantVal},
+					want{
+						val: wantVal,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Word()
+				return testCase{
+					"int/not int",
+					Raw{Val: wantVal},
+					want{
+						err: ErrBadType,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Int32()
+				return testCase{
+					"int/as int32",
+					Raw{Val: wantVal},
+					want{
+						err: ErrBadType,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Int64()
+				return testCase{
+					"int/as int64",
+					Raw{Val: wantVal},
+					want{
+						err: ErrBadType,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Number(10, 1000)
+				return testCase{
+					"int64/int",
+					Raw{Val: wantVal},
+					want{
+						err: ErrBadType,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
+					},
+				}
+			},
 		}
 
 		for _, tt := range testCases {
