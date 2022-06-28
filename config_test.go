@@ -110,6 +110,18 @@ func TestLoad(t *testing.T) {
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
+	t.Run("fail if notified errors", func(t *testing.T) {
+		_, gotErr := Load(
+			testConfigFactory,
+			withMockSource(&mockKeyValueSource{
+				values: map[string]val.Raw{},
+			}, nil),
+		)
+		if !assert.Error(t, gotErr) {
+			return
+		}
+		assert.EqualError(t, gotErr, "failed building config: value val1 not found; value val2 not found; value val3 not found")
+	})
 	t.Run("fail if no sources", func(t *testing.T) {
 		_, err := Load(
 			testConfigFactory,

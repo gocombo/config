@@ -2,13 +2,24 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gocombo/config/val"
 )
 
+type valuesProviderErrors []error
+
+func (v valuesProviderErrors) Error() string {
+	result := make([]string, len(v))
+	for i, err := range v {
+		result[i] = err.Error()
+	}
+	return "failed building config: " + strings.Join(result, "; ")
+}
+
 type valuesProvider struct {
 	sources []Source
-	errors  []error
+	errors  valuesProviderErrors
 }
 
 // Get returns the value for the given key or false
@@ -25,7 +36,7 @@ func (p *valuesProvider) Get(key string) (val.Raw, bool) {
 // NotifyError notifies the provider of an error
 // that may occur when parsing or is value is missing
 func (p *valuesProvider) NotifyError(key string, err error) {
-	panic("not implemented") // TODO: Implement
+	p.errors = append(p.errors, err)
 }
 
 type SourceLoader func() (Source, error)
@@ -71,5 +82,9 @@ func Load[T any](factory configFactory[T], optsSetters ...LoadOpt) (*T, error) {
 		sources: sources,
 	}
 
-	return factory(provider), nil
+	cfg := factory(provider)
+	if provider.errors != nil {
+		return nil, provider.errors
+	}
+	return cfg, nil
 }
