@@ -60,7 +60,7 @@ func TestValue(t *testing.T) {
 					"string/not a string",
 					Raw{Val: wantVal},
 					want{
-						err: ErrBadType,
+						err: ErrConvertFailed{},
 					},
 					func(l Provider, key string) interface{} {
 						return Define[string](l, key)
@@ -86,7 +86,7 @@ func TestValue(t *testing.T) {
 					"int/not int",
 					Raw{Val: wantVal},
 					want{
-						err: ErrBadType,
+						err: ErrConvertFailed{},
 					},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
@@ -96,10 +96,10 @@ func TestValue(t *testing.T) {
 			func() testCase {
 				wantVal := gofakeit.Int32()
 				return testCase{
-					"int/as int32",
+					"int/from int32",
 					Raw{Val: wantVal},
 					want{
-						err: ErrBadType,
+						err: ErrConvertFailed{},
 					},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
@@ -109,10 +109,10 @@ func TestValue(t *testing.T) {
 			func() testCase {
 				wantVal := gofakeit.Int64()
 				return testCase{
-					"int/as int64",
+					"int/from int64",
 					Raw{Val: wantVal},
 					want{
-						err: ErrBadType,
+						err: ErrConvertFailed{},
 					},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
@@ -122,10 +122,23 @@ func TestValue(t *testing.T) {
 			func() testCase {
 				wantVal := gofakeit.Number(10, 1000)
 				return testCase{
-					"int64/int",
+					"int/from string",
+					Raw{Val: strconv.Itoa(wantVal)},
+					want{
+						val: wantVal,
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Int64()
+				return testCase{
+					"int64",
 					Raw{Val: wantVal},
 					want{
-						err: ErrBadType,
+						val: wantVal,
 					},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
@@ -135,10 +148,36 @@ func TestValue(t *testing.T) {
 			func() testCase {
 				wantVal := gofakeit.Number(10, 1000)
 				return testCase{
-					"int/from string",
-					Raw{Val: strconv.Itoa(wantVal)},
+					"int64/from int",
+					Raw{Val: wantVal},
 					want{
-						err: ErrBadType,
+						val: int64(wantVal),
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Int32()
+				return testCase{
+					"int64/from int32",
+					Raw{Val: wantVal},
+					want{
+						val: int64(wantVal),
+					},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Int64()
+				return testCase{
+					"int64/from string",
+					Raw{Val: strconv.FormatInt(wantVal, 10)},
+					want{
+						val: wantVal,
 					},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
@@ -155,6 +194,7 @@ func TestValue(t *testing.T) {
 			* - bool from string
 			* - bool anything else should fail
 			* - complex struct or slice
+			* - string[] from csv string
 			 */
 		}
 
@@ -171,7 +211,7 @@ func TestValue(t *testing.T) {
 				gotVal := tt.define(loader, valPath)
 				gotErr := loader.errorsByPath[valPath]
 				if tt.want.err != nil {
-					assert.ErrorIs(t, gotErr, tt.want.err)
+					assert.ErrorAs(t, gotErr, &tt.want.err)
 					return
 				}
 				if !assert.NoError(t, gotErr) {
@@ -210,7 +250,7 @@ func TestValue(t *testing.T) {
 			rawByPath[val1Path] = Raw{Val: gofakeit.Number(1, 100)}
 			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
-			assert.ErrorIs(t, loader.errorsByPath[val1Path], ErrBadType)
+			assert.ErrorIs(t, loader.errorsByPath[val1Path], ErrConvertFailed{})
 		})
 	})
 }
