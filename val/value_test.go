@@ -46,9 +46,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"string",
 					Raw{Val: wantVal},
-					want{
-						val: wantVal,
-					},
+					want{val: wantVal},
 					func(l Provider, key string) interface{} {
 						return Define[string](l, key)
 					},
@@ -59,9 +57,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"string/not a string",
 					Raw{Val: wantVal},
-					want{
-						err: ErrConvertFailed{},
-					},
+					want{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[string](l, key)
 					},
@@ -72,9 +68,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int",
 					Raw{Val: wantVal},
-					want{
-						val: wantVal,
-					},
+					want{val: wantVal},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
@@ -85,9 +79,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int/not int",
 					Raw{Val: wantVal},
-					want{
-						err: ErrConvertFailed{},
-					},
+					want{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
@@ -98,9 +90,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int/from int32",
 					Raw{Val: wantVal},
-					want{
-						err: ErrConvertFailed{},
-					},
+					want{val: int(wantVal)},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
@@ -111,9 +101,51 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int/from int64",
 					Raw{Val: wantVal},
-					want{
-						err: ErrConvertFailed{},
+					want{val: int(wantVal)},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
 					},
+				}
+			},
+			func() testCase {
+				wantVal := float32(gofakeit.Int32())
+				return testCase{
+					"int/from float32",
+					Raw{Val: wantVal},
+					want{val: int(wantVal)},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Float32Range(100, 200)
+				return testCase{
+					"int/from float32 fractional",
+					Raw{Val: wantVal},
+					want{err: ErrConvertFailed{}},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := float64(gofakeit.Int64())
+				return testCase{
+					"int/from float64",
+					Raw{Val: wantVal},
+					want{val: int(wantVal)},
+					func(l Provider, key string) interface{} {
+						return Define[int](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Float64Range(100, 200)
+				return testCase{
+					"int/from float64 fractional",
+					Raw{Val: wantVal},
+					want{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
@@ -124,9 +156,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int/from string",
 					Raw{Val: strconv.Itoa(wantVal)},
-					want{
-						val: wantVal,
-					},
+					want{val: wantVal},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
@@ -137,9 +167,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int64",
 					Raw{Val: wantVal},
-					want{
-						val: wantVal,
-					},
+					want{val: wantVal},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
 					},
@@ -150,9 +178,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int64/from int",
 					Raw{Val: wantVal},
-					want{
-						val: int64(wantVal),
-					},
+					want{val: int64(wantVal)},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
 					},
@@ -163,9 +189,51 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int64/from int32",
 					Raw{Val: wantVal},
-					want{
-						val: int64(wantVal),
+					want{val: int64(wantVal)},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
 					},
+				}
+			},
+			func() testCase {
+				wantVal := float32(gofakeit.Int32())
+				return testCase{
+					"int64/from float32",
+					Raw{Val: wantVal},
+					want{val: int64(wantVal)},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Float32Range(100, 200)
+				return testCase{
+					"int64/from float32 fractional",
+					Raw{Val: wantVal},
+					want{err: ErrConvertFailed{}},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := float64(gofakeit.Int64())
+				return testCase{
+					"int64/from float64",
+					Raw{Val: wantVal},
+					want{val: int64(wantVal)},
+					func(l Provider, key string) interface{} {
+						return Define[int64](l, key)
+					},
+				}
+			},
+			func() testCase {
+				wantVal := gofakeit.Float64Range(100, 200)
+				return testCase{
+					"int64/from float64 fractional",
+					Raw{Val: wantVal},
+					want{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
 					},
@@ -176,9 +244,7 @@ func TestValue(t *testing.T) {
 				return testCase{
 					"int64/from string",
 					Raw{Val: strconv.FormatInt(wantVal, 10)},
-					want{
-						val: wantVal,
-					},
+					want{val: wantVal},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
 					},

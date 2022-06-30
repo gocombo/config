@@ -3,6 +3,7 @@ package val
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -79,10 +80,21 @@ var supportedConverters = typeConverter{
 		switch actualVal := val.(type) {
 		case int:
 			intVal = actualVal
-		// case float32:
-		// 	intVal = int(actualVal)
-		// case float64:
-		// 	intVal = int(actualVal)
+		case int32:
+			intVal = int(actualVal)
+		case int64:
+			intVal = int(actualVal)
+		case float32:
+			actualVal64 := float64(actualVal)
+			if math.Trunc(actualVal64) != actualVal64 {
+				err = errors.New("float32 value is not an integer")
+			}
+			intVal = int(actualVal)
+		case float64:
+			if math.Trunc(actualVal) != actualVal {
+				err = errors.New("float64 value is not an integer")
+			}
+			intVal = int(actualVal)
 		case string:
 			intVal, err = strconv.Atoi(actualVal)
 		default:
@@ -103,6 +115,17 @@ var supportedConverters = typeConverter{
 		case int32:
 			intVal = int64(actualVal)
 		case int:
+			intVal = int64(actualVal)
+		case float32:
+			actualVal64 := float64(actualVal)
+			if math.Trunc(actualVal64) != actualVal64 {
+				err = errors.New("float32 value is not an integer")
+			}
+			intVal = int64(actualVal)
+		case float64:
+			if math.Trunc(actualVal) != actualVal {
+				err = errors.New("float64 value is not an integer")
+			}
 			intVal = int64(actualVal)
 		case string:
 			intVal, err = strconv.ParseInt(actualVal, 10, 64)
