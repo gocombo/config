@@ -26,229 +26,152 @@ func (l *mockLoader) NotifyError(path string, err error) {
 	l.errorsByPath[path] = err
 }
 
+type valueTestCaseWant struct {
+	val interface{}
+	err error
+}
+
+type valueTestCase struct {
+	name     string
+	rawValue Raw
+	valueTestCaseWant
+	define func(l Provider, key string) interface{}
+}
+
+func makeValaueTestCase[T any](
+	name string,
+	rawValue interface{},
+	wantVal interface{},
+) valueTestCase {
+	return valueTestCase{
+		name,
+		Raw{Val: rawValue},
+		valueTestCaseWant{val: wantVal},
+		func(l Provider, key string) interface{} {
+			return Define[T](l, key)
+		},
+	}
+}
 func TestValue(t *testing.T) {
 	t.Run("types", func(t *testing.T) {
-		type want struct {
-			val interface{}
-			err error
-		}
-
-		type testCase struct {
-			name     string
-			rawValue Raw
-			want
-			define func(l Provider, key string) interface{}
-		}
-
-		testCases := []func() testCase{
-			func() testCase {
-				wantVal := gofakeit.SentenceSimple()
-				return testCase{
-					"string",
-					Raw{Val: wantVal},
-					want{val: wantVal},
-					func(l Provider, key string) interface{} {
-						return Define[string](l, key)
-					},
-				}
+		testCases := []func() valueTestCase{
+			func() valueTestCase {
+				rawVal := gofakeit.SentenceSimple()
+				return makeValaueTestCase[string]("string", rawVal, rawVal)
 			},
-			func() testCase {
+			func() valueTestCase {
 				wantVal := gofakeit.Number(1, 100)
-				return testCase{
+				return valueTestCase{
 					"string/not a string",
 					Raw{Val: wantVal},
-					want{err: ErrConvertFailed{}},
+					valueTestCaseWant{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[string](l, key)
 					},
 				}
 			},
-			func() testCase {
-				wantVal := gofakeit.Number(10, 1000)
-				return testCase{
-					"int",
-					Raw{Val: wantVal},
-					want{val: wantVal},
-					func(l Provider, key string) interface{} {
-						return Define[int](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Number(10, 1000)
+				return makeValaueTestCase[int]("int", rawVal, rawVal)
 			},
-			func() testCase {
+			func() valueTestCase {
 				wantVal := gofakeit.Word()
-				return testCase{
+				return valueTestCase{
 					"int/not int",
 					Raw{Val: wantVal},
-					want{err: ErrConvertFailed{}},
+					valueTestCaseWant{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
 				}
 			},
-			func() testCase {
-				wantVal := gofakeit.Int32()
-				return testCase{
-					"int/from int32",
-					Raw{Val: wantVal},
-					want{val: int(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Int32()
+				return makeValaueTestCase[int]("int/from int32", rawVal, int(rawVal))
 			},
-			func() testCase {
-				wantVal := gofakeit.Int64()
-				return testCase{
-					"int/from int64",
-					Raw{Val: wantVal},
-					want{val: int(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Int64()
+				return makeValaueTestCase[int]("int/from int64", rawVal, int(rawVal))
 			},
-			func() testCase {
-				wantVal := float32(gofakeit.Int32())
-				return testCase{
-					"int/from float32",
-					Raw{Val: wantVal},
-					want{val: int(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := float32(gofakeit.Int32())
+				return makeValaueTestCase[int]("int/from float32", rawVal, int(rawVal))
 			},
-			func() testCase {
+			func() valueTestCase {
 				wantVal := gofakeit.Float32Range(100, 200)
-				return testCase{
+				return valueTestCase{
 					"int/from float32 fractional",
 					Raw{Val: wantVal},
-					want{err: ErrConvertFailed{}},
+					valueTestCaseWant{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
 				}
 			},
-			func() testCase {
-				wantVal := float64(gofakeit.Int64())
-				return testCase{
-					"int/from float64",
-					Raw{Val: wantVal},
-					want{val: int(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Number(100, 200)
+				return makeValaueTestCase[int]("int/from float64", float64(rawVal), rawVal)
 			},
-			func() testCase {
+			func() valueTestCase {
 				wantVal := gofakeit.Float64Range(100, 200)
-				return testCase{
+				return valueTestCase{
 					"int/from float64 fractional",
 					Raw{Val: wantVal},
-					want{err: ErrConvertFailed{}},
+					valueTestCaseWant{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int](l, key)
 					},
 				}
 			},
-			func() testCase {
-				wantVal := gofakeit.Number(10, 1000)
-				return testCase{
-					"int/from string",
-					Raw{Val: strconv.Itoa(wantVal)},
-					want{val: wantVal},
-					func(l Provider, key string) interface{} {
-						return Define[int](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Number(10, 1000)
+				return makeValaueTestCase[int]("int/from string", strconv.Itoa(rawVal), rawVal)
 			},
-			func() testCase {
-				wantVal := gofakeit.Int64()
-				return testCase{
-					"int64",
-					Raw{Val: wantVal},
-					want{val: wantVal},
-					func(l Provider, key string) interface{} {
-						return Define[int64](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Int64()
+				return makeValaueTestCase[int64]("int64", rawVal, rawVal)
 			},
-			func() testCase {
-				wantVal := gofakeit.Number(10, 1000)
-				return testCase{
-					"int64/from int",
-					Raw{Val: wantVal},
-					want{val: int64(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int64](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Number(10, 1000)
+				return makeValaueTestCase[int64]("int64/from int", rawVal, int64(rawVal))
 			},
-			func() testCase {
-				wantVal := gofakeit.Int32()
-				return testCase{
-					"int64/from int32",
-					Raw{Val: wantVal},
-					want{val: int64(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int64](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Int32()
+				return makeValaueTestCase[int64]("int64/from int32", rawVal, int64(rawVal))
 			},
-			func() testCase {
-				wantVal := float32(gofakeit.Int32())
-				return testCase{
-					"int64/from float32",
-					Raw{Val: wantVal},
-					want{val: int64(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int64](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := float32(gofakeit.Int32())
+				return makeValaueTestCase[int64]("int64/from float32", rawVal, int64(rawVal))
 			},
-			func() testCase {
+			func() valueTestCase {
 				wantVal := gofakeit.Float32Range(100, 200)
-				return testCase{
+				return valueTestCase{
 					"int64/from float32 fractional",
 					Raw{Val: wantVal},
-					want{err: ErrConvertFailed{}},
+					valueTestCaseWant{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
 					},
 				}
 			},
-			func() testCase {
-				wantVal := float64(gofakeit.Int64())
-				return testCase{
-					"int64/from float64",
-					Raw{Val: wantVal},
-					want{val: int64(wantVal)},
-					func(l Provider, key string) interface{} {
-						return Define[int64](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := float64(gofakeit.Int64())
+				return makeValaueTestCase[int64]("int64/from float64", rawVal, int64(rawVal))
 			},
-			func() testCase {
+			func() valueTestCase {
 				wantVal := gofakeit.Float64Range(100, 200)
-				return testCase{
+				return valueTestCase{
 					"int64/from float64 fractional",
 					Raw{Val: wantVal},
-					want{err: ErrConvertFailed{}},
+					valueTestCaseWant{err: ErrConvertFailed{}},
 					func(l Provider, key string) interface{} {
 						return Define[int64](l, key)
 					},
 				}
 			},
-			func() testCase {
-				wantVal := gofakeit.Int64()
-				return testCase{
-					"int64/from string",
-					Raw{Val: strconv.FormatInt(wantVal, 10)},
-					want{val: wantVal},
-					func(l Provider, key string) interface{} {
-						return Define[int64](l, key)
-					},
-				}
+			func() valueTestCase {
+				rawVal := gofakeit.Int64()
+				return makeValaueTestCase[int64]("int64/from string", strconv.FormatInt(rawVal, 10), rawVal)
 			},
 
 			// TODO:
@@ -276,14 +199,14 @@ func TestValue(t *testing.T) {
 				}
 				gotVal := tt.define(loader, valPath)
 				gotErr := loader.errorsByPath[valPath]
-				if tt.want.err != nil {
-					assert.ErrorAs(t, gotErr, &tt.want.err)
+				if tt.valueTestCaseWant.err != nil {
+					assert.ErrorAs(t, gotErr, &tt.valueTestCaseWant.err)
 					return
 				}
 				if !assert.NoError(t, gotErr) {
 					return
 				}
-				assert.Equal(t, tt.want.val, gotVal)
+				assert.Equal(t, tt.valueTestCaseWant.val, gotVal)
 			})
 		}
 	})
