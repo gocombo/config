@@ -167,9 +167,11 @@ var supportedConverters = typeConverter{
 			boolVal = newVal
 		case string:
 			boolVal, err = strconv.ParseBool(newVal)
+		default:
+			err = errors.New("unexpected bool type")
 		}
 		if err != nil {
-			return fmt.Errorf("Expected bool value but got: %v(%[1]T)", val)
+			return err
 		}
 		target.Set(reflect.ValueOf(boolVal))
 		return nil

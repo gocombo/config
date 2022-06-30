@@ -146,10 +146,21 @@ func TestValue(t *testing.T) {
 				rawVal := gofakeit.Int64()
 				return makeValaueTestCase[int64]("int64/from string", strconv.FormatInt(rawVal, 10), rawVal)
 			},
+			func() valueTestCase {
+				rawVal := gofakeit.Bool()
+				return makeValaueTestCase[bool]("bool", rawVal, rawVal)
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Number(10, 100)
+				return makeValaueTestCaseErr[bool]("bool/not bool", rawVal)
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Bool()
+				return makeValaueTestCase[bool]("bool/from string", strconv.FormatBool(rawVal), rawVal)
+			},
 
 			// TODO:
 			/*
-			* - int from string
 			* - duration from string
 			* - duration number should fail
 			* - bool
