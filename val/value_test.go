@@ -163,9 +163,6 @@ func TestValue(t *testing.T) {
 			/*
 			* - duration from string
 			* - duration number should fail
-			* - bool
-			* - bool from string
-			* - bool anything else should fail
 			* - complex struct or slice
 			* - string[] from csv string
 			 */
