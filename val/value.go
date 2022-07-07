@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ErrConvertFailed struct {
@@ -206,18 +207,36 @@ var supportedConverters = typeConverter{
 		}
 		return unmarshalJSONToStruct(jsonData, target)
 	},
+	"Duration": func(val interface{}, target reflect.Value) error {
+		var durationVal time.Duration
+		var err error
+		switch actualVal := val.(type) {
+		case time.Duration:
+			durationVal = actualVal
+		case string:
+			durationVal, err = time.ParseDuration(actualVal)
+		default:
+			err = errors.New("unexpected Duration type")
+		}
+		if err != nil {
+			return err
+		}
+		target.Set(reflect.ValueOf(durationVal))
+		return nil
+	},
 }
 
 func (c typeConverter) convert(source interface{}, target reflect.Value) error {
 	kind := target.Kind()
 	targetTypeName := kind.String()
 
-	if kind == reflect.Struct || kind == reflect.Map {
+	switch {
+	case kind == reflect.Struct || kind == reflect.Map:
 		targetTypeName = "json-marshaled"
-	}
-
-	if kind == reflect.Slice {
+	case kind == reflect.Slice:
 		targetTypeName = "[]" + target.Type().Elem().Name()
+	case targetTypeName != target.Type().Name():
+		targetTypeName = target.Type().Name()
 	}
 
 	convert, ok := c[targetTypeName]

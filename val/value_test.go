@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/assert"
@@ -269,12 +270,19 @@ func TestValue(t *testing.T) {
 				}
 				return makeValaueTestCase[map[string]string]("map/from string", string(rawVal), wantVal)
 			},
-
-			// TODO:
-			/*
-			* - duration from string
-			* - duration number should fail
-			 */
+			func() valueTestCase {
+				wantVal := time.Duration(gofakeit.Number(10, 100)) * time.Second
+				return makeValaueTestCase[time.Duration]("duration", wantVal, wantVal)
+			},
+			func() valueTestCase {
+				wantVal := time.Duration(gofakeit.Number(10, 100)) * time.Second
+				rawVal := wantVal.String()
+				return makeValaueTestCase[time.Duration]("duration/from string", rawVal, wantVal)
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Number(100, 200)
+				return makeValaueTestCaseErr[time.Duration]("duration/from number", rawVal)
+			},
 		}
 
 		for _, tt := range testCases {
