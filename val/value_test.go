@@ -3,6 +3,7 @@ package val
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -77,6 +78,56 @@ func TestValue(t *testing.T) {
 			func() valueTestCase {
 				rawVal := gofakeit.Number(1, 100)
 				return makeValaueTestCaseErr[string]("string/not a string", rawVal)
+			},
+			func() valueTestCase {
+				rawVal := []string{
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+				}
+				return makeValaueTestCase[[]string]("[]string", rawVal, rawVal)
+			},
+			func() valueTestCase {
+				wantVal := []string{
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+				}
+				rawVal := make([]interface{}, len(wantVal))
+				for i, v := range wantVal {
+					rawVal[i] = v
+				}
+				return makeValaueTestCase[[]string](
+					"[]string/from []interface{}",
+					rawVal,
+					wantVal,
+				)
+			},
+			func() valueTestCase {
+				wantVal := []string{
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+				}
+				rawVal := strings.Join(wantVal, ",")
+				return makeValaueTestCase[[]string](
+					"[]string/from csv string",
+					rawVal,
+					wantVal,
+				)
+			},
+			func() valueTestCase {
+				wantVal := []string{
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+					gofakeit.SentenceSimple(),
+				}
+				rawVal := strings.Join(wantVal, " , ")
+				return makeValaueTestCase[[]string](
+					"[]string/from csv string with commas",
+					rawVal,
+					wantVal,
+				)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(10, 1000)

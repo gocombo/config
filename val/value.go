@@ -49,9 +49,12 @@ var supportedConverters = typeConverter{
 		var err error
 		switch actualSliceVal := val.(type) {
 		case string:
-			strSlice = strings.FieldsFunc(strings.Replace(actualSliceVal, " ", "", -1), func(c rune) bool {
+			strSlice = strings.FieldsFunc(actualSliceVal, func(c rune) bool {
 				return c == ','
 			})
+			for i, val := range strSlice {
+				strSlice[i] = strings.Trim(val, " ")
+			}
 		case []string:
 			strSlice = actualSliceVal
 		case []interface{}: // By default json.Unmarshal will use []interface{} for string arrays
@@ -60,13 +63,13 @@ var supportedConverters = typeConverter{
 			for i, val := range actualSliceVal {
 				strVal, ok := val.(string)
 				if !ok {
-					err = fmt.Errorf("expected []string but got %v(%[1]T)", actualSliceVal)
+					err = fmt.Errorf("expected []string slice value on index=%v: %v(%[2]T)", i, actualSliceVal)
 					break parseActualVal
 				}
 				strSlice[i] = strVal
 			}
 		default:
-			err = fmt.Errorf("expected []string but got %v(%[1]T)", val)
+			err = fmt.Errorf("expected []string type")
 		}
 		if err != nil {
 			return err
