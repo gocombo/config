@@ -159,6 +159,10 @@ var supportedConverters = typeConverter{
 		switch actualVal := val.(type) {
 		case int:
 			floatVal = float64(actualVal)
+		case int32:
+			floatVal = float64(actualVal)
+		case int64:
+			floatVal = float64(actualVal)
 		case float32:
 			floatVal = float64(actualVal)
 		case float64:

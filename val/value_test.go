@@ -174,6 +174,9 @@ func TestValue(t *testing.T) {
 				return makeValaueTestCase[int]("int/from string", strconv.Itoa(rawVal), rawVal)
 			},
 			func() valueTestCase {
+				return makeValaueTestCaseErr[int]("int/not supported", gofakeit.Bool())
+			},
+			func() valueTestCase {
 				rawVal := gofakeit.Int64()
 				return makeValaueTestCase[int64]("int64", rawVal, rawVal)
 			},
@@ -204,6 +207,36 @@ func TestValue(t *testing.T) {
 			func() valueTestCase {
 				rawVal := gofakeit.Int64()
 				return makeValaueTestCase[int64]("int64/from string", strconv.FormatInt(rawVal, 10), rawVal)
+			},
+			func() valueTestCase {
+				return makeValaueTestCaseErr[int64]("int64/not supported", gofakeit.Bool())
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Float64()
+				return makeValaueTestCase[float64]("float64", rawVal, rawVal)
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Number(10, 1000)
+				return makeValaueTestCase[float64]("float64/from int", rawVal, float64(rawVal))
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Int32()
+				return makeValaueTestCase[float64]("float64/from int32", rawVal, float64(rawVal))
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Int64()
+				return makeValaueTestCase[float64]("float64/from int64", rawVal, float64(rawVal))
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Float32Range(100, 200)
+				return makeValaueTestCase[float64]("float64/from float32", rawVal, float64(rawVal))
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Float64()
+				return makeValaueTestCase[float64]("float64/from string", strconv.FormatFloat(rawVal, 'f', -1, 64), rawVal)
+			},
+			func() valueTestCase {
+				return makeValaueTestCaseErr[float64]("float64/not supported", gofakeit.Bool())
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Bool()
