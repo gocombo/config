@@ -337,7 +337,8 @@ func TestValue(t *testing.T) {
 			rawByPath[val1Path] = Raw{Val: gofakeit.Number(1, 100)}
 			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
-			assert.ErrorIs(t, loader.errorsByPath[val1Path], ErrConvertFailed{})
+			wantErr := ErrConvertFailed{}
+			assert.ErrorAs(t, loader.errorsByPath[val1Path], &wantErr)
 		})
 	})
 }
