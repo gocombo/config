@@ -1,6 +1,7 @@
 package val
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -66,6 +67,12 @@ func makeValaueTestCaseErr[T any](
 			return Define[T](l, key)
 		},
 	}
+}
+
+type testStruct struct {
+	Key1 string `json:"key1"`
+	Key2 string `json:"key2"`
+	Key3 string `json:"key3"`
 }
 
 func TestValue(t *testing.T) {
@@ -209,13 +216,64 @@ func TestValue(t *testing.T) {
 				rawVal := gofakeit.Bool()
 				return makeValaueTestCase[bool]("bool/from string", strconv.FormatBool(rawVal), rawVal)
 			},
+			func() valueTestCase {
+				rawVal := testStruct{
+					Key1: gofakeit.Word(),
+					Key2: gofakeit.Word(),
+					Key3: gofakeit.Word(),
+				}
+				return makeValaueTestCase[testStruct]("struct", rawVal, rawVal)
+			},
+			func() valueTestCase {
+				wantVal := testStruct{
+					Key1: gofakeit.Word(),
+					Key2: gofakeit.Word(),
+					Key3: gofakeit.Word(),
+				}
+				rawVal, err := json.Marshal(wantVal)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				return makeValaueTestCase[testStruct]("struct/from string", string(rawVal), wantVal)
+			},
+			func() valueTestCase {
+				wantVal := testStruct{
+					Key1: gofakeit.Word(),
+					Key2: gofakeit.Word(),
+					Key3: gofakeit.Word(),
+				}
+				var rawVal interface{} = map[string]interface{}{
+					"key1": wantVal.Key1,
+					"key2": wantVal.Key2,
+					"key3": wantVal.Key3,
+				}
+				return makeValaueTestCase[testStruct]("struct/from interface{}", rawVal, wantVal)
+			},
+			func() valueTestCase {
+				wantVal := map[string]string{
+					"key1": gofakeit.Word(),
+					"key2": gofakeit.Word(),
+					"key3": gofakeit.Word(),
+				}
+				return makeValaueTestCase[map[string]string]("map", wantVal, wantVal)
+			},
+			func() valueTestCase {
+				wantVal := map[string]string{
+					"key1": gofakeit.Word(),
+					"key2": gofakeit.Word(),
+					"key3": gofakeit.Word(),
+				}
+				rawVal, err := json.Marshal(wantVal)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				return makeValaueTestCase[map[string]string]("map/from string", string(rawVal), wantVal)
+			},
 
 			// TODO:
 			/*
 			* - duration from string
 			* - duration number should fail
-			* - complex struct or slice
-			* - string[] from csv string
 			 */
 		}
 

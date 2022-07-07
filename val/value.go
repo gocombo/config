@@ -1,6 +1,7 @@
 package val
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -31,6 +32,16 @@ type Provider interface {
 	// NotifyError notifies the provider of an error
 	// that may occur when parsing or is value is missing
 	NotifyError(key string, err error)
+}
+
+func unmarshalJSONToStruct(val []byte, target reflect.Value) error {
+	newVal := reflect.New(target.Type())
+	err := json.Unmarshal(val, newVal.Interface())
+	if err != nil {
+		return err
+	}
+	target.Set(reflect.ValueOf(newVal.Elem().Interface()))
+	return nil
 }
 
 type typeConverter map[string]func(source interface{}, target reflect.Value) error
@@ -179,22 +190,42 @@ var supportedConverters = typeConverter{
 		target.Set(reflect.ValueOf(boolVal))
 		return nil
 	},
+	"json-marshaled": func(val interface{}, target reflect.Value) error {
+		var jsonData []byte
+		switch actualVal := val.(type) {
+		case string:
+			jsonData = []byte(actualVal)
+		default:
+			// We by default convert to json first and then unmarshal to target type
+			// otherwise it can be quite challenging to handle all individual cases
+			var err error
+			jsonData, err = json.Marshal(val)
+			if err != nil {
+				return err
+			}
+		}
+		return unmarshalJSONToStruct(jsonData, target)
+	},
 }
 
 func (c typeConverter) convert(source interface{}, target reflect.Value) error {
 	kind := target.Kind()
-	typeName := kind.String()
+	targetTypeName := kind.String()
 
-	if kind == reflect.Slice {
-		typeName = "[]" + target.Type().Elem().Name()
+	if kind == reflect.Struct || kind == reflect.Map {
+		targetTypeName = "json-marshaled"
 	}
 
-	convert, ok := c[typeName]
+	if kind == reflect.Slice {
+		targetTypeName = "[]" + target.Type().Elem().Name()
+	}
+
+	convert, ok := c[targetTypeName]
 	if !ok {
 		return ErrConvertFailed{
 			message:        "type not supported",
 			source:         source,
-			targetTypeName: typeName,
+			targetTypeName: targetTypeName,
 		}
 	}
 	err := convert(source, target)
@@ -202,7 +233,7 @@ func (c typeConverter) convert(source interface{}, target reflect.Value) error {
 		return ErrConvertFailed{
 			message:        err.Error(),
 			source:         source,
-			targetTypeName: typeName,
+			targetTypeName: targetTypeName,
 		}
 	}
 	return err
