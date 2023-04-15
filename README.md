@@ -3,12 +3,14 @@ Golang multi-source configuration module
 
 ## Contributing
 
-In order to get started please make sure to have golang installed.
-Simplest is to use [gvm](https://github.com/moovweb/gvm) and [direnv](https://github.com/direnv/direnv).
-Run `$(grep "^go " go.mod | awk '{print $2}')` to check a version of golang used.
+In order to get started please make sure to have golang of required version installed.
+
+Recommended is to use [gobrew](https://github.com/kevincobain2000/gobrew). It is also recommended to have [direnv](https://github.com/direnv/direnv) installed.
+
+Run `$(grep "^go " go.mod | awk '{print $2}')` to check a version of golang needed.
 
 Install required version of golang:
-`gvm install $(grep "^go " go.mod | awk '{print $2}')`
+`gobrew install $(grep "^go " go.mod | awk '{print $2}')@latest`
 
 Install dev dependencies:
 `make tools`

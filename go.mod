@@ -1,6 +1,6 @@
 module github.com/gocombo/config
 
-go 1.18
+go 1.20
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.16.0
