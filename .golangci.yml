@@ -1,6 +1,16 @@
 linters:
   enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - containedctx
+    - contextcheck
+    - cyclop
+    - decorder
+    - durationcheck
     - errcheck
+    - errorlint
     - gosimple
     - govet
     - ineffassign
@@ -75,7 +85,7 @@ linters-settings:
       - opinionated
 
 service:
-  golangci-lint-version: 1.46.2
+  golangci-lint-version: 1.52.2
 
 
 issues:
@@ -86,3 +96,4 @@ issues:
       linters:
         - dupl
         - errcheck
+        - cyclop
