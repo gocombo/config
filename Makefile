@@ -31,3 +31,19 @@ tools:
 test: lint ${cover_dir} .cover-packages
 	go test -coverpkg=$(shell cat .cover-packages) -coverprofile=${cover_profile} ./...
 	go tool cover -html=${cover_profile} -o ${cover_html}
+
+
+${cover_dir}/coverage-func.txt: ${cover_profile}
+	go tool cover -func=${cover_profile} -o $@
+
+${cover_dir}/coverage-total.txt: ${cover_dir}/coverage-func.txt
+	 $(shell cat $? | grep total | grep -Eo '[0-9]+\.[0-9]+' > $@)
+
+test-cover: test ${cover_dir}/coverage-total.txt .cover-threshold
+	@eval total=$$(cat ${cover_dir}/coverage-total.txt); \
+	eval threshold=$$(cat .cover-threshold); \
+	echo "Total coverage: $${total}, threshold: $${threshold}"; \
+	if [ $$(echo "$${total} < $${threshold}" | bc) -eq 1 ]; then \
+	    echo "Error: coverage is below threshold" >&2; \
+	    exit 1; \
+	fi
