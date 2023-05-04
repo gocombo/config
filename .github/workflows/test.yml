@@ -23,9 +23,4 @@ jobs:
         make tools
 
     - name: Test
-      run: make test
-
-    - name: Report coverage
-      run: goveralls -uploadsource -service=github -coverprofile=.cover/profile.out
-      env:
-        COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make test-cover
