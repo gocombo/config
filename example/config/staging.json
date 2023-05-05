@@ -1,0 +1,6 @@
+{
+    "sayHelloTimes": 3,
+    "hello": {
+        "message": "Hello (staging)"
+    }
+}
