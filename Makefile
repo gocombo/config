@@ -18,10 +18,7 @@ ${cover_dir}:
 	mkdir -p ${cover_dir}
 
 tools:
-	@for package in $$(grep '_ \"' tools/tools.go | sed 's/_ //g' | sed 's/[^a-zA-Z0-9/.]//g'); do \
-		echo "Installing package $${package} or skipping if already installed..."; \
-		go install $${package}; \
-	done
+	go install github.com/mitranim/gow@latest
 
 .cover-packages:
 	go list ./... | grep -v -f .cover-ignore  > $@.tmp
