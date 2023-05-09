@@ -49,10 +49,12 @@ type typeConverter map[string]func(source interface{}, target reflect.Value) err
 
 var supportedConverters = typeConverter{
 	"string": func(val interface{}, target reflect.Value) error {
-		if _, ok := val.(string); !ok {
+		targetType := target.Type()
+		rVal := reflect.ValueOf(val)
+		if ok := rVal.CanConvert(targetType); !ok {
 			return fmt.Errorf("not a string")
 		}
-		targetVal := reflect.ValueOf(val).Convert(target.Type())
+		targetVal := rVal.Convert(targetType)
 		target.Set(targetVal)
 		return nil
 	},
