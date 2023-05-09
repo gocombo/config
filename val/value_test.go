@@ -91,7 +91,7 @@ func TestValue(t *testing.T) {
 				return makeValaueTestCase[string]("string from alias", rawVal, wantVal)
 			},
 			func() valueTestCase {
-				rawVal := gofakeit.Number(1, 100)
+				rawVal := gofakeit.Date()
 				return makeValaueTestCaseErr[string]("string/not a string", rawVal)
 			},
 			func() valueTestCase {
