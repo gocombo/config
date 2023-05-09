@@ -104,15 +104,15 @@ func TestValue(t *testing.T) {
 			},
 			func() valueTestCase {
 				wantVal := []stringAlias{
-					stringAlias(gofakeit.SentenceSimple()),
-					stringAlias(gofakeit.SentenceSimple()),
-					stringAlias(gofakeit.SentenceSimple()),
+					stringAlias(gofakeit.Word()),
+					stringAlias(gofakeit.Word()),
+					stringAlias(gofakeit.Word()),
 				}
 				rawVal := make([]interface{}, len(wantVal))
 				for i, v := range wantVal {
-					rawVal[i] = v
+					rawVal[i] = string(v)
 				}
-				return makeValaueTestCase[[]string]("[]string alias", rawVal, wantVal)
+				return makeValaueTestCase[[]stringAlias]("[]string alias", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				wantVal := []string{
@@ -386,7 +386,7 @@ func TestValue(t *testing.T) {
 		})
 		t.Run("invalid value", func(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
-			rawByPath[val1Path] = Raw{Val: gofakeit.Number(1, 100)}
+			rawByPath[val1Path] = Raw{Val: gofakeit.Date()}
 			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
 			wantErr := ErrConvertFailed{}
