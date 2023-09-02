@@ -76,6 +76,8 @@ type testStruct struct {
 	Key3 string `json:"key3"`
 }
 
+type stringAlias string
+
 func TestValue(t *testing.T) {
 	t.Run("types", func(t *testing.T) {
 		testCases := []func() valueTestCase{
@@ -84,7 +86,12 @@ func TestValue(t *testing.T) {
 				return makeValaueTestCase[string]("string", rawVal, rawVal)
 			},
 			func() valueTestCase {
-				rawVal := gofakeit.Number(1, 100)
+				wantVal := gofakeit.SentenceSimple()
+				rawVal := stringAlias(wantVal)
+				return makeValaueTestCase[string]("string from alias", rawVal, wantVal)
+			},
+			func() valueTestCase {
+				rawVal := gofakeit.Date()
 				return makeValaueTestCaseErr[string]("string/not a string", rawVal)
 			},
 			func() valueTestCase {
@@ -94,6 +101,18 @@ func TestValue(t *testing.T) {
 					gofakeit.SentenceSimple(),
 				}
 				return makeValaueTestCase[[]string]("[]string", rawVal, rawVal)
+			},
+			func() valueTestCase {
+				wantVal := []stringAlias{
+					stringAlias(gofakeit.Word()),
+					stringAlias(gofakeit.Word()),
+					stringAlias(gofakeit.Word()),
+				}
+				rawVal := make([]interface{}, len(wantVal))
+				for i, v := range wantVal {
+					rawVal[i] = string(v)
+				}
+				return makeValaueTestCase[[]stringAlias]("[]string alias", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				wantVal := []string{
@@ -367,7 +386,7 @@ func TestValue(t *testing.T) {
 		})
 		t.Run("invalid value", func(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
-			rawByPath[val1Path] = Raw{Val: gofakeit.Number(1, 100)}
+			rawByPath[val1Path] = Raw{Val: gofakeit.Date()}
 			gotVal1Val := Define[string](loader, val1Path)
 			assert.Equal(t, "", gotVal1Val)
 			wantErr := ErrConvertFailed{}

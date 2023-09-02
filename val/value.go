@@ -35,9 +35,23 @@ type Provider interface {
 	NotifyError(key string, err error)
 }
 
-func unmarshalJSONToStruct(val []byte, target reflect.Value) error {
+func jsonMarshalSetValue(val interface{}, target reflect.Value) error {
+	var jsonData []byte
+	switch actualVal := val.(type) {
+	case string:
+		jsonData = []byte(actualVal)
+	default:
+		// We by default convert to json first and then unmarshal to target type
+		// otherwise it can be quite challenging to handle all individual cases
+		var err error
+		jsonData, err = json.Marshal(val)
+		if err != nil {
+			return err
+		}
+	}
+
 	newVal := reflect.New(target.Type())
-	err := json.Unmarshal(val, newVal.Interface())
+	err := json.Unmarshal(jsonData, newVal.Interface())
 	if err != nil {
 		return err
 	}
@@ -49,10 +63,12 @@ type typeConverter map[string]func(source interface{}, target reflect.Value) err
 
 var supportedConverters = typeConverter{
 	"string": func(val interface{}, target reflect.Value) error {
-		if _, ok := val.(string); !ok {
+		targetType := target.Type()
+		rVal := reflect.ValueOf(val)
+		if ok := rVal.CanConvert(targetType); !ok {
 			return fmt.Errorf("not a string")
 		}
-		targetVal := reflect.ValueOf(val).Convert(target.Type())
+		targetVal := rVal.Convert(targetType)
 		target.Set(targetVal)
 		return nil
 	},
@@ -86,7 +102,12 @@ var supportedConverters = typeConverter{
 		if err != nil {
 			return err
 		}
-		target.Set(reflect.ValueOf(strSlice))
+		strSliceVal := reflect.ValueOf(strSlice)
+		if ok := strSliceVal.Type().AssignableTo(target.Type()); !ok {
+			// We attempt JSON marshal here. It's very likely a type alias
+			return jsonMarshalSetValue(val, target)
+		}
+		target.Set(strSliceVal)
 		return nil
 	},
 	"int": func(val interface{}, target reflect.Value) error {
@@ -195,22 +216,7 @@ var supportedConverters = typeConverter{
 		target.Set(reflect.ValueOf(boolVal))
 		return nil
 	},
-	"json-marshaled": func(val interface{}, target reflect.Value) error {
-		var jsonData []byte
-		switch actualVal := val.(type) {
-		case string:
-			jsonData = []byte(actualVal)
-		default:
-			// We by default convert to json first and then unmarshal to target type
-			// otherwise it can be quite challenging to handle all individual cases
-			var err error
-			jsonData, err = json.Marshal(val)
-			if err != nil {
-				return err
-			}
-		}
-		return unmarshalJSONToStruct(jsonData, target)
-	},
+	"json-marshaled": jsonMarshalSetValue,
 	"Duration": func(val interface{}, target reflect.Value) error {
 		var durationVal time.Duration
 		var err error
@@ -238,7 +244,8 @@ func (c typeConverter) convert(source interface{}, target reflect.Value) error {
 	case kind == reflect.Struct || kind == reflect.Map:
 		targetTypeName = "json-marshaled"
 	case kind == reflect.Slice:
-		targetTypeName = "[]" + target.Type().Elem().Name()
+		typeElem := target.Type().Elem().Kind().String()
+		targetTypeName = "[]" + typeElem
 	case targetTypeName != target.Type().Name():
 		targetTypeName = target.Type().Name()
 	}
