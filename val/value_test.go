@@ -384,6 +384,12 @@ func TestValue(t *testing.T) {
 			assert.Len(t, loader.errorsByPath, 1)
 			assert.Equal(t, fmt.Errorf("value %s not found", val1Path), loader.errorsByPath[val1Path])
 		})
+		t.Run("non existing optional", func(t *testing.T) {
+			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
+			gotVal1Val := Define[string](loader, val1Path, Optional())
+			assert.Equal(t, "", gotVal1Val)
+			assert.Nil(t, loader.errorsByPath[val1Path])
+		})
 		t.Run("invalid value", func(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
 			rawByPath[val1Path] = Raw{Val: gofakeit.Date()}

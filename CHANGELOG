@@ -1,3 +1,7 @@
+# v0.0.3
+* Optional values support
+* Better handling of string arrays
+
 # v0.0.2
 * Type aliases support
 

@@ -269,11 +269,29 @@ func (c typeConverter) convert(source interface{}, target reflect.Value) error {
 	return err
 }
 
-func Define[T any](l Provider, key string) T {
+type defineOptions struct {
+	optional bool
+}
+
+type DefineOption func(*defineOptions)
+
+func Optional() DefineOption {
+	return func(o *defineOptions) {
+		o.optional = true
+	}
+}
+
+func Define[T any](l Provider, key string, setOpts ...DefineOption) T {
 	var value T
+	opts := defineOptions{}
+	for _, opt := range setOpts {
+		opt(&opts)
+	}
 	raw, ok := l.Get(key)
 	if !ok {
-		l.NotifyError(key, fmt.Errorf("value %s not found", key))
+		if !opts.optional {
+			l.NotifyError(key, fmt.Errorf("value %s not found", key))
+		}
 		return value
 	}
 
