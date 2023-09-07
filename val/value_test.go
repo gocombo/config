@@ -115,6 +115,20 @@ func TestValue(t *testing.T) {
 				return makeValaueTestCase[[]stringAlias]("[]string alias", rawVal, wantVal)
 			},
 			func() valueTestCase {
+				initialValues := []string{
+					gofakeit.Word(),
+					gofakeit.Word(),
+					gofakeit.Word(),
+				}
+				wantVal := make([]stringAlias, len(initialValues))
+				for i, v := range initialValues {
+					wantVal[i] = stringAlias(v)
+				}
+
+				rawVal := strings.Join([]string(initialValues), ",")
+				return makeValaueTestCase[[]stringAlias]("slice string alias from string", rawVal, wantVal)
+			},
+			func() valueTestCase {
 				wantVal := []string{
 					gofakeit.SentenceSimple(),
 					gofakeit.SentenceSimple(),
