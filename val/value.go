@@ -105,7 +105,7 @@ var supportedConverters = typeConverter{
 		strSliceVal := reflect.ValueOf(strSlice)
 		if ok := strSliceVal.Type().AssignableTo(target.Type()); !ok {
 			// We attempt JSON marshal here. It's very likely a type alias
-			return jsonMarshalSetValue(val, target)
+			return jsonMarshalSetValue(strSlice, target)
 		}
 		target.Set(strSliceVal)
 		return nil
