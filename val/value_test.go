@@ -100,7 +100,7 @@ func TestValue(t *testing.T) {
 					gofakeit.SentenceSimple(),
 					gofakeit.SentenceSimple(),
 				}
-				return makeValaueTestCase[[]string]("[]string", rawVal, rawVal)
+				return makeValaueTestCase[[]string]("slice string", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				wantVal := []stringAlias{
@@ -112,7 +112,21 @@ func TestValue(t *testing.T) {
 				for i, v := range wantVal {
 					rawVal[i] = string(v)
 				}
-				return makeValaueTestCase[[]stringAlias]("[]string alias", rawVal, wantVal)
+				return makeValaueTestCase[[]stringAlias]("slice string alias", rawVal, wantVal)
+			},
+			func() valueTestCase {
+				initialValues := []string{
+					gofakeit.Word(),
+					gofakeit.Word(),
+					gofakeit.Word(),
+				}
+				wantVal := make([]stringAlias, len(initialValues))
+				for i, v := range initialValues {
+					wantVal[i] = stringAlias(v)
+				}
+
+				rawVal := strings.Join([]string(initialValues), ",")
+				return makeValaueTestCase[[]stringAlias]("slice string alias from string", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				wantVal := []string{
@@ -125,7 +139,7 @@ func TestValue(t *testing.T) {
 					rawVal[i] = v
 				}
 				return makeValaueTestCase[[]string](
-					"[]string/from []interface{}",
+					"slice string/from []interface{}",
 					rawVal,
 					wantVal,
 				)
@@ -138,7 +152,7 @@ func TestValue(t *testing.T) {
 				}
 				rawVal := strings.Join(wantVal, ",")
 				return makeValaueTestCase[[]string](
-					"[]string/from csv string",
+					"slice string/from csv string",
 					rawVal,
 					wantVal,
 				)
@@ -151,7 +165,7 @@ func TestValue(t *testing.T) {
 				}
 				rawVal := strings.Join(wantVal, " , ")
 				return makeValaueTestCase[[]string](
-					"[]string/from csv string with commas",
+					"slice string/from csv string with commas",
 					rawVal,
 					wantVal,
 				)
@@ -383,6 +397,12 @@ func TestValue(t *testing.T) {
 			assert.Equal(t, "", gotVal1Val)
 			assert.Len(t, loader.errorsByPath, 1)
 			assert.Equal(t, fmt.Errorf("value %s not found", val1Path), loader.errorsByPath[val1Path])
+		})
+		t.Run("non existing optional", func(t *testing.T) {
+			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
+			gotVal1Val := Define[string](loader, val1Path, Optional())
+			assert.Equal(t, "", gotVal1Val)
+			assert.Nil(t, loader.errorsByPath[val1Path])
 		})
 		t.Run("invalid value", func(t *testing.T) {
 			val1Path := fmt.Sprintf("/path1/%s", gofakeit.Word())
