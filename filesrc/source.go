@@ -22,14 +22,28 @@ type LoadValOptBuilder struct {
 	valuePath string
 }
 
-func (b *LoadValOptBuilder) From(filePath string) SourceOpt {
-	return func(opts *sourceOpts) {
-		opts.keyToSourceFile[b.valuePath] = sourceFileOpt{
-			filePath: filePath,
-		}
+type FromOpt func(s *sourceFileOpt)
+
+func IgnoreMissing() FromOpt {
+	return func(s *sourceFileOpt) {
+		s.ignoreMissing = true
 	}
 }
 
+// From defines filePath to set value from
+func (b *LoadValOptBuilder) From(filePath string, pathOpts ...FromOpt) SourceOpt {
+	return func(opts *sourceOpts) {
+		s := sourceFileOpt{
+			filePath: filePath,
+		}
+		for _, pathOpt := range pathOpts {
+			pathOpt(&s)
+		}
+		opts.keyToSourceFile[b.valuePath] = s
+	}
+}
+
+// Set config value using From
 func Set(path string) *LoadValOptBuilder {
 	return &LoadValOptBuilder{
 		valuePath: path,
@@ -68,7 +82,7 @@ func load(optSetters ...SourceOpt) (config.Source, error) {
 	}
 	for key, env := range opts.keyToSourceFile {
 		data, err := os.ReadFile(env.filePath)
-		if err != nil {
+		if err != nil && !(env.ignoreMissing && os.IsNotExist(err)) {
 			return nil, err
 		}
 		src.valuesByKey[key] = val.Raw{
