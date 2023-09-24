@@ -41,7 +41,7 @@ type valueTestCase struct {
 	define func(l Provider, key string) interface{}
 }
 
-func makeValaueTestCase[T any](
+func makeValueTestCase[T any](
 	name string,
 	rawValue interface{},
 	wantVal interface{},
@@ -56,7 +56,7 @@ func makeValaueTestCase[T any](
 	}
 }
 
-func makeValaueTestCaseErr[T any](
+func makeValueTestCaseErr[T any](
 	name string,
 	rawValue interface{},
 ) valueTestCase {
@@ -83,16 +83,21 @@ func TestValue(t *testing.T) {
 		testCases := []func() valueTestCase{
 			func() valueTestCase {
 				rawVal := gofakeit.SentenceSimple()
-				return makeValaueTestCase[string]("string", rawVal, rawVal)
+				return makeValueTestCase[string]("string", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				wantVal := gofakeit.SentenceSimple()
 				rawVal := stringAlias(wantVal)
-				return makeValaueTestCase[string]("string from alias", rawVal, wantVal)
+				return makeValueTestCase[string]("string from alias", rawVal, wantVal)
+			},
+			func() valueTestCase {
+				wantVal := gofakeit.SentenceSimple()
+				rawVal := []byte(wantVal)
+				return makeValueTestCase[string]("string from bytes", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Date()
-				return makeValaueTestCaseErr[string]("string/not a string", rawVal)
+				return makeValueTestCaseErr[string]("string/not a string", rawVal)
 			},
 			func() valueTestCase {
 				rawVal := []string{
@@ -100,7 +105,7 @@ func TestValue(t *testing.T) {
 					gofakeit.SentenceSimple(),
 					gofakeit.SentenceSimple(),
 				}
-				return makeValaueTestCase[[]string]("slice string", rawVal, rawVal)
+				return makeValueTestCase[[]string]("slice string", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				wantVal := []stringAlias{
@@ -112,7 +117,7 @@ func TestValue(t *testing.T) {
 				for i, v := range wantVal {
 					rawVal[i] = string(v)
 				}
-				return makeValaueTestCase[[]stringAlias]("slice string alias", rawVal, wantVal)
+				return makeValueTestCase[[]stringAlias]("slice string alias", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				initialValues := []string{
@@ -126,7 +131,7 @@ func TestValue(t *testing.T) {
 				}
 
 				rawVal := strings.Join([]string(initialValues), ",")
-				return makeValaueTestCase[[]stringAlias]("slice string alias from string", rawVal, wantVal)
+				return makeValueTestCase[[]stringAlias]("slice string alias from string", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				wantVal := []string{
@@ -138,7 +143,7 @@ func TestValue(t *testing.T) {
 				for i, v := range wantVal {
 					rawVal[i] = v
 				}
-				return makeValaueTestCase[[]string](
+				return makeValueTestCase[[]string](
 					"slice string/from []interface{}",
 					rawVal,
 					wantVal,
@@ -151,7 +156,7 @@ func TestValue(t *testing.T) {
 					gofakeit.SentenceSimple(),
 				}
 				rawVal := strings.Join(wantVal, ",")
-				return makeValaueTestCase[[]string](
+				return makeValueTestCase[[]string](
 					"slice string/from csv string",
 					rawVal,
 					wantVal,
@@ -164,7 +169,7 @@ func TestValue(t *testing.T) {
 					gofakeit.SentenceSimple(),
 				}
 				rawVal := strings.Join(wantVal, " , ")
-				return makeValaueTestCase[[]string](
+				return makeValueTestCase[[]string](
 					"slice string/from csv string with commas",
 					rawVal,
 					wantVal,
@@ -172,116 +177,116 @@ func TestValue(t *testing.T) {
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(10, 1000)
-				return makeValaueTestCase[int]("int", rawVal, rawVal)
+				return makeValueTestCase[int]("int", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Word()
-				return makeValaueTestCaseErr[int]("int/not int", rawVal)
+				return makeValueTestCaseErr[int]("int/not int", rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Int32()
-				return makeValaueTestCase[int]("int/from int32", rawVal, int(rawVal))
+				return makeValueTestCase[int]("int/from int32", rawVal, int(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Int64()
-				return makeValaueTestCase[int]("int/from int64", rawVal, int(rawVal))
+				return makeValueTestCase[int]("int/from int64", rawVal, int(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := float32(gofakeit.Int32())
-				return makeValaueTestCase[int]("int/from float32", rawVal, int(rawVal))
+				return makeValueTestCase[int]("int/from float32", rawVal, int(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Float32Range(100, 200)
-				return makeValaueTestCaseErr[int]("int/from float32 fractional", rawVal)
+				return makeValueTestCaseErr[int]("int/from float32 fractional", rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(100, 200)
-				return makeValaueTestCase[int]("int/from float64", float64(rawVal), rawVal)
+				return makeValueTestCase[int]("int/from float64", float64(rawVal), rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Float64Range(100, 200)
-				return makeValaueTestCaseErr[int]("int/from float64 fractional", rawVal)
+				return makeValueTestCaseErr[int]("int/from float64 fractional", rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(10, 1000)
-				return makeValaueTestCase[int]("int/from string", strconv.Itoa(rawVal), rawVal)
+				return makeValueTestCase[int]("int/from string", strconv.Itoa(rawVal), rawVal)
 			},
 			func() valueTestCase {
-				return makeValaueTestCaseErr[int]("int/not supported", gofakeit.Bool())
+				return makeValueTestCaseErr[int]("int/not supported", gofakeit.Bool())
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Int64()
-				return makeValaueTestCase[int64]("int64", rawVal, rawVal)
+				return makeValueTestCase[int64]("int64", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(10, 1000)
-				return makeValaueTestCase[int64]("int64/from int", rawVal, int64(rawVal))
+				return makeValueTestCase[int64]("int64/from int", rawVal, int64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Int32()
-				return makeValaueTestCase[int64]("int64/from int32", rawVal, int64(rawVal))
+				return makeValueTestCase[int64]("int64/from int32", rawVal, int64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := float32(gofakeit.Int32())
-				return makeValaueTestCase[int64]("int64/from float32", rawVal, int64(rawVal))
+				return makeValueTestCase[int64]("int64/from float32", rawVal, int64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Float32Range(100, 200)
-				return makeValaueTestCaseErr[int64]("int64/from float32 fractional", rawVal)
+				return makeValueTestCaseErr[int64]("int64/from float32 fractional", rawVal)
 			},
 			func() valueTestCase {
 				rawVal := float64(gofakeit.Int64())
-				return makeValaueTestCase[int64]("int64/from float64", rawVal, int64(rawVal))
+				return makeValueTestCase[int64]("int64/from float64", rawVal, int64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Float64Range(100, 200)
-				return makeValaueTestCaseErr[int64]("int64/from float64 fractional", rawVal)
+				return makeValueTestCaseErr[int64]("int64/from float64 fractional", rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Int64()
-				return makeValaueTestCase[int64]("int64/from string", strconv.FormatInt(rawVal, 10), rawVal)
+				return makeValueTestCase[int64]("int64/from string", strconv.FormatInt(rawVal, 10), rawVal)
 			},
 			func() valueTestCase {
-				return makeValaueTestCaseErr[int64]("int64/not supported", gofakeit.Bool())
+				return makeValueTestCaseErr[int64]("int64/not supported", gofakeit.Bool())
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Float64()
-				return makeValaueTestCase[float64]("float64", rawVal, rawVal)
+				return makeValueTestCase[float64]("float64", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(10, 1000)
-				return makeValaueTestCase[float64]("float64/from int", rawVal, float64(rawVal))
+				return makeValueTestCase[float64]("float64/from int", rawVal, float64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Int32()
-				return makeValaueTestCase[float64]("float64/from int32", rawVal, float64(rawVal))
+				return makeValueTestCase[float64]("float64/from int32", rawVal, float64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Int64()
-				return makeValaueTestCase[float64]("float64/from int64", rawVal, float64(rawVal))
+				return makeValueTestCase[float64]("float64/from int64", rawVal, float64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Float32Range(100, 200)
-				return makeValaueTestCase[float64]("float64/from float32", rawVal, float64(rawVal))
+				return makeValueTestCase[float64]("float64/from float32", rawVal, float64(rawVal))
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Float64()
-				return makeValaueTestCase[float64]("float64/from string", strconv.FormatFloat(rawVal, 'f', -1, 64), rawVal)
+				return makeValueTestCase[float64]("float64/from string", strconv.FormatFloat(rawVal, 'f', -1, 64), rawVal)
 			},
 			func() valueTestCase {
-				return makeValaueTestCaseErr[float64]("float64/not supported", gofakeit.Bool())
+				return makeValueTestCaseErr[float64]("float64/not supported", gofakeit.Bool())
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Bool()
-				return makeValaueTestCase[bool]("bool", rawVal, rawVal)
+				return makeValueTestCase[bool]("bool", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(10, 100)
-				return makeValaueTestCaseErr[bool]("bool/not bool", rawVal)
+				return makeValueTestCaseErr[bool]("bool/not bool", rawVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Bool()
-				return makeValaueTestCase[bool]("bool/from string", strconv.FormatBool(rawVal), rawVal)
+				return makeValueTestCase[bool]("bool/from string", strconv.FormatBool(rawVal), rawVal)
 			},
 			func() valueTestCase {
 				rawVal := testStruct{
@@ -289,7 +294,7 @@ func TestValue(t *testing.T) {
 					Key2: gofakeit.Word(),
 					Key3: gofakeit.Word(),
 				}
-				return makeValaueTestCase[testStruct]("struct", rawVal, rawVal)
+				return makeValueTestCase[testStruct]("struct", rawVal, rawVal)
 			},
 			func() valueTestCase {
 				wantVal := testStruct{
@@ -301,7 +306,7 @@ func TestValue(t *testing.T) {
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				return makeValaueTestCase[testStruct]("struct/from string", string(rawVal), wantVal)
+				return makeValueTestCase[testStruct]("struct/from string", string(rawVal), wantVal)
 			},
 			func() valueTestCase {
 				wantVal := testStruct{
@@ -314,7 +319,7 @@ func TestValue(t *testing.T) {
 					"key2": wantVal.Key2,
 					"key3": wantVal.Key3,
 				}
-				return makeValaueTestCase[testStruct]("struct/from interface{}", rawVal, wantVal)
+				return makeValueTestCase[testStruct]("struct/from interface{}", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				wantVal := map[string]string{
@@ -322,7 +327,7 @@ func TestValue(t *testing.T) {
 					"key2": gofakeit.Word(),
 					"key3": gofakeit.Word(),
 				}
-				return makeValaueTestCase[map[string]string]("map", wantVal, wantVal)
+				return makeValueTestCase[map[string]string]("map", wantVal, wantVal)
 			},
 			func() valueTestCase {
 				wantVal := map[string]string{
@@ -334,20 +339,20 @@ func TestValue(t *testing.T) {
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				return makeValaueTestCase[map[string]string]("map/from string", string(rawVal), wantVal)
+				return makeValueTestCase[map[string]string]("map/from string", string(rawVal), wantVal)
 			},
 			func() valueTestCase {
 				wantVal := time.Duration(gofakeit.Number(10, 100)) * time.Second
-				return makeValaueTestCase[time.Duration]("duration", wantVal, wantVal)
+				return makeValueTestCase[time.Duration]("duration", wantVal, wantVal)
 			},
 			func() valueTestCase {
 				wantVal := time.Duration(gofakeit.Number(10, 100)) * time.Second
 				rawVal := wantVal.String()
-				return makeValaueTestCase[time.Duration]("duration/from string", rawVal, wantVal)
+				return makeValueTestCase[time.Duration]("duration/from string", rawVal, wantVal)
 			},
 			func() valueTestCase {
 				rawVal := gofakeit.Number(100, 200)
-				return makeValaueTestCaseErr[time.Duration]("duration/from number", rawVal)
+				return makeValueTestCaseErr[time.Duration]("duration/from number", rawVal)
 			},
 		}
 
