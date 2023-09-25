@@ -109,7 +109,14 @@ func Test_FileSource(t *testing.T) {
 		if !assert.NoError(t, err) {
 			return
 		}
-		assertVal(t, source, path1, "")
-		assertVal(t, source, path2, "")
+		_, ok := source.GetValue(path1)
+		if !assert.False(t, ok, "key %s found", path1) {
+			return
+		}
+
+		_, ok = source.GetValue(path2)
+		if !assert.False(t, ok, "key %s found", path2) {
+			return
+		}
 	})
 }

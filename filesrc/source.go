@@ -82,8 +82,12 @@ func load(optSetters ...SourceOpt) (config.Source, error) {
 	}
 	for key, env := range opts.keyToSourceFile {
 		data, err := os.ReadFile(env.filePath)
-		if err != nil && !(env.ignoreMissing && os.IsNotExist(err)) {
+		isMissing := os.IsNotExist(err)
+		if err != nil && !(env.ignoreMissing && isMissing) {
 			return nil, err
+		}
+		if isMissing {
+			continue
 		}
 		src.valuesByKey[key] = val.Raw{
 			Key: key,
